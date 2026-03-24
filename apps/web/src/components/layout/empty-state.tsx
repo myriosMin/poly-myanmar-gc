@@ -1,6 +1,6 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import type { ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface EmptyStateProps {
   title: string
@@ -18,12 +18,13 @@ export function EmptyState({
   icon,
 }: EmptyStateProps) {
   return (
-    <Card className="border-dashed border-border/80 bg-white/70 shadow-none">
-      <CardContent className="flex flex-col items-start gap-4 p-6">
+    <Card className="card-float border-dashed border-border/70 bg-card/80 shadow-none">
+      <CardContent className="flex flex-col items-start gap-5 p-8">
         {icon}
-        <div>
-          <p className="font-display text-lg font-semibold">{title}</p>
-          <p className="text-sm text-muted-foreground">{description}</p>
+        <div className="space-y-2">
+          <p className="section-kicker">Nothing yet</p>
+          <p className="font-display text-2xl font-semibold">{title}</p>
+          <p className="max-w-lg text-sm text-muted-foreground">{description}</p>
         </div>
         {actionLabel && onAction ? (
           <Button onClick={onAction} variant="outline">

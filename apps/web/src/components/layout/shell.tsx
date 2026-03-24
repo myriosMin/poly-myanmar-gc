@@ -1,164 +1,228 @@
-import type { ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
-  ArrowUpRight,
-  CircleGauge,
+  CalendarDays,
   FileText,
-  LayoutGrid,
-  Megaphone,
+  Menu,
+  Moon,
   Settings2,
-  ShieldCheck,
   Sparkles,
+  SunMedium,
   Users,
+  X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { useSessionQuery } from '@/lib/query'
+import { useTheme } from '@/app/theme'
 import { cn } from '@/lib/utils'
 
 const privateNav = [
   { to: '/profiles', label: 'Profiles', icon: Users },
-  { to: '/events', label: 'Events', icon: Megaphone },
+  { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/resources', label: 'Resources', icon: FileText },
   { to: '/collab', label: 'Collab', icon: Sparkles },
-  { to: '/admin', label: 'Admin', icon: ShieldCheck, reviewerOnly: true },
-  { to: '/settings', label: 'Settings', icon: Settings2 },
 ]
 
-export function AppShell() {
-  const { data: session } = useSessionQuery()
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme()
+
+  return (
+    <Button
+      type="button"
+      size="icon"
+      variant="outline"
+      aria-label="Toggle theme"
+      onClick={toggleTheme}
+      className="shrink-0"
+    >
+      {theme === 'light' ? <Moon className="h-4 w-4" /> : <SunMedium className="h-4 w-4" />}
+    </Button>
+  )
+}
+
+function DesktopNav() {
   const location = useLocation()
+  const navRef = useRef<HTMLDivElement | null>(null)
+  const [pillStyle, setPillStyle] = useState<CSSProperties>({})
+
+  useLayoutEffect(() => {
+    const updatePill = () => {
+      const activeItem = navRef.current?.querySelector<HTMLElement>('[data-active="true"]')
+      if (!navRef.current) {
+        return
+      }
+
+      if (!activeItem) {
+        setPillStyle({
+          width: '0px',
+          opacity: 0,
+        })
+        return
+      }
+
+      const containerRect = navRef.current.getBoundingClientRect()
+      const itemRect = activeItem.getBoundingClientRect()
+
+      setPillStyle({
+        left: `${itemRect.left - containerRect.left}px`,
+        width: `${itemRect.width}px`,
+        opacity: 1,
+      })
+    }
+
+    updatePill()
+    window.addEventListener('resize', updatePill)
+    return () => window.removeEventListener('resize', updatePill)
+  }, [location.pathname])
+
+  return (
+    <nav className="hidden min-w-0 flex-1 justify-center lg:flex">
+      <div
+        ref={navRef}
+        className="relative flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-border/70 bg-background/72 p-1 shadow-[0_20px_50px_-34px_hsla(var(--shadow-color),0.42)]"
+      >
+        <div
+          className="pointer-events-none absolute inset-y-1 rounded-full border border-primary/10 bg-primary shadow-[0_18px_36px_-22px_hsla(var(--shadow-color),0.55)] transition-all duration-300 ease-out"
+          style={pillStyle}
+        />
+        {privateNav.map((item) => {
+          const Icon = item.icon
+          const isActive = location.pathname === item.to
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              data-active={isActive ? 'true' : 'false'}
+              className={cn(
+                'relative z-10 inline-flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition duration-200',
+                isActive
+                  ? 'text-primary-foreground'
+                  : 'text-foreground/72 hover:bg-muted/80 hover:text-foreground',
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </NavLink>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
+
+function MobileMenu({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+}) {
+  if (!open) {
+    return null
+  }
+
+  return (
+    <div className="mt-4 space-y-3 border-t border-border/60 pt-4 lg:hidden">
+      <nav className="grid gap-2">
+        {privateNav.map((item) => {
+          const Icon = item.icon
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onClose}
+              className={({ isActive }) =>
+                cn(
+                  'inline-flex items-center justify-between rounded-[1.2rem] border border-border/60 bg-background/70 px-4 py-3 text-sm font-medium transition duration-200',
+                  isActive
+                    ? 'border-primary/20 bg-primary text-primary-foreground'
+                    : 'text-foreground/80 hover:bg-muted/80 hover:text-foreground',
+                )
+              }
+            >
+              <span className="inline-flex items-center gap-2">
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </span>
+            </NavLink>
+          )
+        })}
+      </nav>
+
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <Button asChild variant="outline" className="flex-1 justify-center">
+          <NavLink to="/settings" onClick={onClose}>
+            <Settings2 className="h-4 w-4" />
+            Settings
+          </NavLink>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function AppShell() {
+  const location = useLocation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
 
   return (
     <div className="min-h-screen bg-shell-gradient text-foreground">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute left-[-8rem] top-[-10rem] h-72 w-72 rounded-full bg-teal-400/15 blur-3xl" />
-        <div className="absolute right-[-4rem] top-24 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-28">
+        <div className="h-full bg-background/55 backdrop-blur-md [mask-image:linear-gradient(180deg,rgba(0,0,0,0.92),rgba(0,0,0,0.58),transparent)]" />
       </div>
-      <div className="relative mx-auto flex min-h-screen max-w-[1700px] flex-col lg:flex-row">
-        <aside className="hidden w-80 shrink-0 border-r border-border/70 bg-white/70 px-5 py-6 backdrop-blur xl:flex xl:flex-col">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-display text-xl font-bold tracking-tight">
-                Poly Myanmar GC
-              </p>
-              <p className="text-sm text-muted-foreground">
-                private graduate club for SG poly students
-              </p>
-            </div>
-            <Badge variant="secondary">private</Badge>
-          </div>
-          <Separator className="my-5" />
-          <nav className="space-y-2">
-            {privateNav.map((item) => {
-              if (item.reviewerOnly && session?.role === 'member') {
-                return null
-              }
-
-              const Icon = item.icon
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition',
-                      isActive
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'text-foreground/80 hover:bg-muted',
-                    )
-                  }
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="editorial-grid absolute inset-x-0 top-0 h-72 opacity-60" />
+        <div className="absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full bg-[#c98d63]/20 blur-3xl" />
+        <div className="absolute right-[-4rem] top-24 h-64 w-64 rounded-full bg-[#789a84]/20 blur-3xl" />
+      </div>
+      <div className="relative mx-auto flex min-h-screen max-w-[1500px] flex-col px-4 pb-10 pt-4 md:px-6">
+        <header className="surface-blur sticky top-4 z-30 rounded-[2rem] px-4 py-4 md:px-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 shrink-0">
+              <p className="section-kicker">Graduate club</p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <NavLink to="/profiles" className="block font-display text-[2rem] font-semibold leading-none">
+                  Poly Myanmar
                 </NavLink>
-              )
-            })}
-          </nav>
-          <div className="mt-auto space-y-4 pt-6">
-            <Card className="border-amber-200/70 bg-amber-50/70 shadow-none">
-              <CardHeader className="space-y-2">
-                <CardTitle className="text-base">Approval state</CardTitle>
-                <CardDescription>
-                  Current access is controlled through the mock session adapter.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex items-center gap-2">
-                <Badge>{session?.approvalState ?? 'loading'}</Badge>
-                <Badge variant="outline">{session?.role ?? 'guest'}</Badge>
-              </CardContent>
-            </Card>
-            <Button asChild className="w-full" variant="outline">
-              <a href="https://github.com/myriosMin/poly-myanmar-gc" target="_blank" rel="noreferrer">
-                <ArrowUpRight className="h-4 w-4" />
-                Open GitHub
-              </a>
+                <span className="hidden h-5 w-px bg-border/70 xl:block" />
+                <p className="hidden text-sm text-muted-foreground xl:block">Let&apos;s keep in touch!</p>
+              </div>
+            </div>
+
+            <DesktopNav />
+
+            <div className="hidden shrink-0 items-center gap-2 lg:flex">
+              <ThemeToggle />
+              <Button asChild size="icon" variant="outline" aria-label="Settings">
+                <NavLink to="/settings">
+                  <Settings2 className="h-4 w-4" />
+                </NavLink>
+              </Button>
+            </div>
+
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              className="lg:hidden"
+              onClick={() => setMobileMenuOpen((current) => !current)}
+            >
+              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
           </div>
-        </aside>
-        <div className="flex-1">
-          <header className="sticky top-0 z-20 border-b border-border/60 bg-white/75 px-4 py-4 backdrop-blur md:px-6">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-display text-2xl font-bold tracking-tight">
-                    Private member workspace
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Focused on networking, events, resources, and collab.
-                  </p>
-                </div>
-                <div className="flex gap-2 xl:hidden">
-                  <Badge variant="secondary">{session?.polytechnic}</Badge>
-                  <Badge>{session?.statusBadge}</Badge>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline">route: {location.pathname}</Badge>
-                <Badge variant="secondary">{session?.polytechnic}</Badge>
-                <Badge>{session?.statusBadge}</Badge>
-                <Badge variant="outline">{session?.role}</Badge>
-                <Button asChild size="sm" variant="outline">
-                  <NavLink to="/pending-approval">
-                    <CircleGauge className="h-4 w-4" />
-                    Access flow
-                  </NavLink>
-                </Button>
-              </div>
-            </div>
-            <nav className="mt-4 flex gap-2 overflow-x-auto pb-1 xl:hidden">
-              {privateNav.map((item) => {
-                if (item.reviewerOnly && session?.role === 'member') {
-                  return null
-                }
 
-                const Icon = item.icon
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      cn(
-                        'inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition',
-                        isActive
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border bg-white hover:bg-muted',
-                      )
-                    }
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </NavLink>
-                )
-              })}
-            </nav>
-          </header>
-          <main className="mx-auto max-w-[1500px] px-4 py-6 md:px-6 lg:py-8">
-            <Outlet />
-          </main>
-        </div>
+          <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+        </header>
+
+        <main className="mx-auto w-full max-w-[1380px] flex-1 px-0 pt-8">
+          <Outlet />
+        </main>
       </div>
     </div>
   )
@@ -167,28 +231,33 @@ export function AppShell() {
 export function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-shell-gradient text-foreground">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute left-[-8rem] top-[-10rem] h-72 w-72 rounded-full bg-teal-400/15 blur-3xl" />
-        <div className="absolute right-[-4rem] top-24 h-64 w-64 rounded-full bg-amber-400/20 blur-3xl" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-28">
+        <div className="h-full bg-background/55 backdrop-blur-md [mask-image:linear-gradient(180deg,rgba(0,0,0,0.92),rgba(0,0,0,0.58),transparent)]" />
       </div>
-      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-6 md:px-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="font-display text-2xl font-bold tracking-tight">
-              Poly Myanmar GC
-            </p>
-            <p className="text-sm text-muted-foreground">
-              private graduate club for Myanmar polytechnics in Singapore
-            </p>
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="editorial-grid absolute inset-x-0 top-0 h-96 opacity-70" />
+        <div className="absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full bg-[#c98d63]/20 blur-3xl" />
+        <div className="absolute right-[-4rem] top-24 h-64 w-64 rounded-full bg-[#789a84]/20 blur-3xl" />
+      </div>
+      <div className="relative mx-auto flex min-h-screen max-w-[1480px] flex-col px-4 py-4 md:px-6">
+        <header className="surface-blur sticky top-4 z-20 rounded-[2rem] px-4 py-4 md:px-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="section-kicker">Myanmar polytechnic network in Singapore</p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <p className="font-display text-3xl font-semibold">Poly Myanmar</p>
+                <Badge variant="outline">Private member access</Badge>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button asChild variant="outline">
+                <NavLink to="/legal/privacy">Privacy</NavLink>
+              </Button>
+            </div>
           </div>
-          <Button asChild variant="outline">
-            <NavLink to="/profiles">
-              <LayoutGrid className="h-4 w-4" />
-              Member view
-            </NavLink>
-          </Button>
-        </div>
-        <div className="flex-1">{children}</div>
+        </header>
+        <div className="flex-1 pt-8">{children}</div>
       </div>
     </div>
   )

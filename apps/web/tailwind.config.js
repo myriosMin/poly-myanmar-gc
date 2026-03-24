@@ -8,7 +8,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Manrope', 'sans-serif'],
-        display: ['Space Grotesk', 'sans-serif'],
+        display: ['Newsreader', 'serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -46,7 +46,7 @@ export default {
       },
       backgroundImage: {
         'shell-gradient':
-          'radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 34%), radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 28%), linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(250, 248, 243, 0.98))',
+          'radial-gradient(circle at top left, rgba(198, 126, 77, 0.18), transparent 30%), radial-gradient(circle at top right, rgba(127, 152, 132, 0.18), transparent 24%), linear-gradient(180deg, rgba(251, 247, 241, 0.98), rgba(246, 239, 228, 0.96))',
       },
     },
   },

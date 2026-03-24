@@ -46,6 +46,16 @@ export type StudentStatus = (typeof studentStatuses)[number]
 export type EventKind = (typeof eventKinds)[number]
 export type ResourceCategory = (typeof resourceCategories)[number]
 export type CollabType = (typeof collabTypes)[number]
+export const publicProfileFields = [
+  'polytechnic',
+  'course',
+  'statusBadge',
+  'jobSeeking',
+  'linkedinUrl',
+  'githubUrl',
+  'portfolioUrl',
+] as const
+export type PublicProfileField = (typeof publicProfileFields)[number]
 
 export interface Session {
   id: string
@@ -60,11 +70,13 @@ export interface Session {
   statusBadge: StudentStatus
   openToCollab: boolean
   jobSeeking: boolean
+  publicFields: PublicProfileField[]
 }
 
 export interface DirectoryProfile {
   id: string
   name: string
+  avatarUrl: string
   polytechnic: Polytechnic
   course: string
   graduationYear: number

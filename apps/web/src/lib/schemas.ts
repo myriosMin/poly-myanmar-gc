@@ -1,5 +1,10 @@
 import { z } from 'zod'
-import { collabTypes, polytechnics, studentStatuses } from '@/lib/domain'
+import {
+  collabTypes,
+  polytechnics,
+  publicProfileFields,
+  studentStatuses,
+} from '@/lib/domain'
 
 export const onboardingSchema = z.object({
   name: z.string().min(2, 'Enter your full name'),
@@ -42,6 +47,7 @@ export const settingsSchema = z.object({
   statusBadge: z.enum(studentStatuses),
   openToCollab: z.boolean(),
   jobSeeking: z.boolean(),
+  publicFields: z.array(z.enum(publicProfileFields)).min(1),
 })
 
 export type OnboardingForm = z.input<typeof onboardingSchema>

@@ -5,7 +5,7 @@ function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        'rounded-3xl border border-border/80 bg-card text-card-foreground shadow-[0_20px_60px_-30px_rgba(15,23,42,0.35)]',
+        'surface-panel rounded-[2rem] text-card-foreground',
         className,
       )}
       {...props}
@@ -17,7 +17,7 @@ function CardHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-5 pb-0', className)} {...props} />
+  return <div className={cn('p-6 pb-0', className)} {...props} />
 }
 
 function CardTitle({
@@ -26,7 +26,7 @@ function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn('font-display text-lg font-semibold tracking-tight', className)}
+      className={cn('font-display text-xl font-semibold tracking-tight', className)}
       {...props}
     />
   )
@@ -43,7 +43,7 @@ function CardContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-5', className)} {...props} />
+  return <div className={cn('p-6', className)} {...props} />
 }
 
 function CardFooter({
@@ -51,7 +51,7 @@ function CardFooter({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex items-center p-5 pt-0', className)} {...props} />
+    <div className={cn('flex items-center p-6 pt-0', className)} {...props} />
   )
 }
 

@@ -32,6 +32,22 @@ const clone = <T,>(value: T): T => structuredClone(value)
 const ensureStrings = (value: string[]) =>
   value.map((item) => item.trim()).filter(Boolean)
 
+const createAvatar = (name: string, start: string, end: string) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${start}" />
+          <stop offset="100%" stop-color="${end}" />
+        </linearGradient>
+      </defs>
+      <rect width="320" height="400" rx="40" fill="url(#bg)" />
+      <circle cx="160" cy="146" r="76" fill="rgba(255,255,255,0.32)" />
+      <path d="M71 338c22-55 64-83 89-83s67 28 89 83" fill="rgba(255,255,255,0.32)" />
+      <text x="160" y="372" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="white" fill-opacity="0.92">${name}</text>
+    </svg>
+  `)}`
+
 let session: Session = {
   id: 'me-001',
   name: 'Min Thu',
@@ -45,12 +61,14 @@ let session: Session = {
   statusBadge: 'mentor',
   openToCollab: true,
   jobSeeking: false,
+  publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl'],
 }
 
 const profiles: DirectoryProfile[] = [
   {
     id: 'profile-1',
     name: 'Nilar Htet',
+    avatarUrl: createAvatar('Nilar Htet', '#d3b08d', '#7a8f84'),
     polytechnic: 'NP',
     course: 'Diploma in Business Informatics',
     graduationYear: 2026,
@@ -69,6 +87,7 @@ const profiles: DirectoryProfile[] = [
   {
     id: 'profile-2',
     name: 'Aung Min',
+    avatarUrl: createAvatar('Aung Min', '#9d785d', '#6d8e8d'),
     polytechnic: 'SP',
     course: 'Diploma in Information Technology',
     graduationYear: 2024,
@@ -87,6 +106,7 @@ const profiles: DirectoryProfile[] = [
   {
     id: 'profile-3',
     name: 'Thiri Zin',
+    avatarUrl: createAvatar('Thiri Zin', '#8c6d68', '#8b9b75'),
     polytechnic: 'TP',
     course: 'Diploma in Cybersecurity',
     graduationYear: 2025,
@@ -103,6 +123,7 @@ const profiles: DirectoryProfile[] = [
   {
     id: 'profile-4',
     name: 'Ko Zeyar',
+    avatarUrl: createAvatar('Ko Zeyar', '#b78f72', '#667f93'),
     polytechnic: 'NYP',
     course: 'Diploma in Data Science',
     graduationYear: 2023,

@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, MapPin, Users } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/layout/empty-state'
 import { PageHeader } from '@/components/layout/page-header'
 import { mockApi } from '@/lib/mock-api'
 import { formatDateTime } from '@/lib/utils'
-import { EmptyState } from '@/components/layout/empty-state'
 
 export function EventsPage() {
   const queryClient = useQueryClient()
@@ -24,46 +23,101 @@ export function EventsPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
-        eyebrow="events"
-        title="Career fairs, hackathons, and meetups with RSVP states."
-        description="Events stay published-only inside the member workspace. The same model is used for admin-created events and weekly worker-sourced drafts."
-        actions={<Badge variant="outline">{eventsQuery.data?.total ?? 0} live events</Badge>}
+        eyebrow="Events"
+        title="Show up with context before the opportunity starts."
+        description="The event view stays light: what it is, when it happens, where it is, and whether you want in."
+        actions={
+          <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+            {eventsQuery.data?.total ?? 0} upcoming
+          </Badge>
+        }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="space-y-4">
-          {eventsQuery.data?.items.length ? (
-            eventsQuery.data.items.map((event) => (
-              <Card key={event.id} className="border-border/70 bg-white/90">
-                <CardHeader className="space-y-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-xl">
-                        {event.title}
-                        <Badge variant="secondary">{event.kind}</Badge>
-                      </CardTitle>
-                      <CardDescription>{event.description}</CardDescription>
-                    </div>
+      <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="surface-panel rounded-[2rem] p-8">
+          <p className="section-kicker">Event rhythm</p>
+          <p className="mt-3 max-w-lg font-display text-4xl font-semibold">
+            Career fairs, warm-ups, hack nights, and small useful gatherings.
+          </p>
+          <p className="mt-4 max-w-md text-sm text-muted-foreground">
+            RSVP quickly, see who is already in, and use the calendar to create better
+            introductions before you arrive.
+          </p>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {eventsQuery.data?.kinds.map((item) => (
+              <div key={item.value} className="rounded-[1.6rem] bg-muted/62 p-4">
+                <p className="section-kicker">{item.value}</p>
+                <p className="mt-2 font-display text-3xl font-semibold">{item.count}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="surface-panel rounded-[2rem] bg-primary p-8 text-primary-foreground">
+          <p className="section-kicker text-primary-foreground/70">Best use of this page</p>
+          <p className="mt-3 max-w-md font-display text-4xl font-semibold">
+            See the event, decide the signal, and move on.
+          </p>
+          <p className="mt-4 max-w-md text-sm text-primary-foreground/82">
+            The point is not endless browsing. It is quick commitment around moments that matter.
+          </p>
+        </div>
+      </section>
+
+      <div className="space-y-4">
+        {eventsQuery.data?.items.length ? (
+          eventsQuery.data.items.map((event) => (
+            <div key={event.id} className="surface-panel card-float rounded-[2rem] p-7">
+              <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
+                <div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">{event.kind}</Badge>
                     <Badge variant="outline">{event.source}</Badge>
                   </div>
-                  <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-primary" />
-                      {formatDateTime(event.startsAt)}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      {event.location}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <Users className="h-4 w-4 text-primary" />
-                      {event.attendees.length}/{event.capacity} going
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-wrap items-center gap-2">
+                  <h2 className="mt-4 max-w-2xl font-display text-4xl font-semibold">
+                    {event.title}
+                  </h2>
+                  <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+                    {event.description}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.6rem] bg-muted/62 px-4 py-3 text-right">
+                  <p className="section-kicker">Your RSVP</p>
+                  <p className="mt-2 text-sm font-medium capitalize">
+                    {event.myRsvp.replace('_', ' ')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-3 md:grid-cols-3">
+                <div className="rounded-[1.5rem] bg-background/80 p-4 text-sm">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  <p className="mt-3 text-muted-foreground">When</p>
+                  <p className="mt-1 font-medium text-foreground">{formatDateTime(event.startsAt)}</p>
+                </div>
+                <div className="rounded-[1.5rem] bg-background/80 p-4 text-sm">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <p className="mt-3 text-muted-foreground">Where</p>
+                  <p className="mt-1 font-medium text-foreground">{event.location}</p>
+                </div>
+                <div className="rounded-[1.5rem] bg-background/80 p-4 text-sm">
+                  <Users className="h-4 w-4 text-primary" />
+                  <p className="mt-3 text-muted-foreground">Attendance</p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {event.attendees.length}/{event.capacity} going
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Attending: {event.attendees.join(', ') || 'No attendees yet'}
+                </p>
+                <div className="flex flex-wrap gap-2">
                   {(['going', 'interested', 'not_going'] as const).map((status) => (
                     <Button
                       key={status}
@@ -75,40 +129,16 @@ export function EventsPage() {
                       {status.replace('_', ' ')}
                     </Button>
                   ))}
-                  <Badge variant="secondary">Your RSVP: {event.myRsvp.replace('_', ' ')}</Badge>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <EmptyState
-              title="No events yet"
-              description="Published events and approved drafts will show up here."
-            />
-          )}
-        </div>
-
-        <Card className="h-fit border-border/70 bg-white/90">
-          <CardHeader>
-            <CardTitle className="text-xl">Why this view matters</CardTitle>
-            <CardDescription>
-              The frontend keeps attendance visible without turning into a social feed.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {eventsQuery.data?.items.slice(0, 2).map((event) => (
-              <div key={event.id} className="rounded-3xl border border-border bg-muted p-4">
-                <p className="font-semibold">{event.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {event.attendees.join(', ') || 'No attendees yet'}
-                </p>
+                </div>
               </div>
-            ))}
-            <div className="rounded-3xl bg-primary/10 p-4 text-sm leading-6 text-foreground">
-              The same route structure will later consume API-backed event drafts, Telegram
-              approvals, and attendance summaries.
             </div>
-          </CardContent>
-        </Card>
+          ))
+        ) : (
+          <EmptyState
+            title="No events yet"
+            description="New meetups and curated opportunities will appear here."
+          />
+        )}
       </div>
     </div>
   )

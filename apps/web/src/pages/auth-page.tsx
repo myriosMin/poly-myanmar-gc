@@ -1,27 +1,26 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { Sparkles, ShieldCheck, UserRoundCheck } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarDays,
+  ShieldCheck,
+  Sparkles,
+  Users2,
+} from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { PageHeader } from '@/components/layout/page-header'
 import type { OnboardingInput } from '@/lib/domain'
 import { polytechnics, studentStatuses } from '@/lib/domain'
-import { onboardingSchema, type OnboardingForm } from '@/lib/schemas'
 import { mockApi } from '@/lib/mock-api'
 import { useSessionQuery } from '@/lib/query'
+import { onboardingSchema, type OnboardingForm } from '@/lib/schemas'
 
 function Field({
   label,
@@ -56,8 +55,8 @@ export function AuthPage() {
       linkedinUrl: 'https://linkedin.com/in/',
       githubUrl: '',
       portfolioUrl: '',
-      skills: 'React, FastAPI, Supabase',
-      hobbies: 'travelling, coffee, badminton',
+      skills: 'React, FastAPI, community building',
+      hobbies: 'coffee chats, badminton, travelling',
       openToCollab: true,
       jobSeeking: true,
       statusBadge: 'current student',
@@ -73,144 +72,180 @@ export function AuthPage() {
   })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="auth + onboarding"
-        title="Google sign-in, LinkedIn verification, and approval review."
-        description="The frontend simulates the actual graduate-club flow: sign in, register with a LinkedIn URL, and wait for reviewer approval before accessing the private member workspace."
-        actions={
-          <>
-            <Badge variant="outline">Google OAuth</Badge>
-            <Badge variant="outline">LinkedIn required</Badge>
-            <Badge variant="outline">manual proof fallback</Badge>
-          </>
-        }
-      />
+    <div className="space-y-8 pb-12">
+      <section className="page-reveal grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+        <div className="mandalay-arch relative overflow-hidden px-6 py-8 md:px-8 md:py-10">
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/8 via-transparent to-transparent" />
+          <div className="relative space-y-8">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">Approved members</Badge>
+              <Badge variant="secondary">Singapore-based</Badge>
+            </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="bg-primary text-primary-foreground shadow-glow">
-          <CardHeader>
-            <CardTitle className="text-2xl">Private club, not a social feed.</CardTitle>
-            <CardDescription className="text-primary-foreground/80">
-              Profiles, events, resources, and collab live behind approval.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                icon: ShieldCheck,
-                title: 'Strict approval',
-                body: 'LinkedIn first, manual proof if needed, reviewer or superadmin decides.',
-              },
-              {
-                icon: UserRoundCheck,
-                title: 'Member access',
-                body: 'Approved users see the member directory, event RSVP, and resources.',
-              },
-              {
-                icon: Sparkles,
-                title: 'Collaboration ready',
-                body: 'Teams can form around hackathons, projects, and open source work.',
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-3xl border border-white/15 bg-white/10 p-4"
-              >
-                <item.icon className="mb-4 h-5 w-5" />
-                <p className="font-display text-lg font-semibold">{item.title}</p>
-                <p className="mt-1 text-sm text-primary-foreground/80">{item.body}</p>
+            <div className="max-w-4xl">
+              <p className="section-kicker">Private network for Myanmar polytechnic students</p>
+              <h1 className="mt-5 max-w-3xl font-display text-5xl font-semibold leading-[0.96] md:text-7xl">
+                Warm access to the right people, events, and opportunities.
+              </h1>
+              <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
+                Poly Myanmar keeps discovery focused: who to meet, what to attend, and where to
+                build together next.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  icon: Users2,
+                  title: 'Credible circle',
+                  body: 'Members are reviewed before entry, so outreach starts with trust.',
+                },
+                {
+                  icon: CalendarDays,
+                  title: 'Useful events',
+                  body: 'Career fairs, hack nights, and community moments stay visible.',
+                },
+                {
+                  icon: Sparkles,
+                  title: 'Real collaboration',
+                  body: 'Find classmates and graduates who are open to building something concrete.',
+                },
+              ].map((item, index) => (
+                <div
+                  key={item.title}
+                  className="card-float rounded-[1.8rem] border border-border/60 bg-background/62 p-5"
+                  style={{ animationDelay: `${index * 90}ms` }}
+                >
+                  <item.icon className="h-5 w-5 text-primary" />
+                  <p className="mt-5 font-display text-[1.9rem] font-semibold leading-tight">
+                    {item.title}
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-4 border-t border-border/60 pt-6 md:grid-cols-[0.7fr_1.3fr]">
+              <div>
+                <p className="section-kicker">Why the club matters</p>
+                <p className="mt-3 font-display text-3xl font-semibold leading-tight">
+                  Small enough to feel personal. Serious enough to shape your next step.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {['Members discover each other faster', 'Events stay opportunity-led', 'Collab starts with clear intent'].map((line) => (
+                  <div key={line} className="rounded-[1.5rem] border border-border/60 bg-card/58 p-4 text-sm text-muted-foreground">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="surface-panel page-reveal rounded-[2rem] p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="section-kicker">Join Poly Myanmar</p>
+              <h2 className="mt-3 font-display text-4xl font-semibold">Apply for access</h2>
+              <p className="mt-3 max-w-md text-sm text-muted-foreground">
+                Keep it concise. LinkedIn is required because approvals stay human and trust-led.
+              </p>
+            </div>
+            <ShieldCheck className="h-5 w-5 text-primary" />
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {['Add profile basics', 'Share credibility links', 'Wait for review'].map((step, index) => (
+              <div key={step} className="rounded-[1.4rem] bg-muted/62 p-4">
+                <p className="section-kicker">0{index + 1}</p>
+                <p className="mt-2 text-sm font-medium">{step}</p>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-border/70 bg-white/90">
-          <CardHeader>
-            <CardTitle className="text-xl">Member application</CardTitle>
-            <CardDescription>
-              Registered users are tracked in the mock API and moved to pending review.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form
-              className="grid gap-4"
-              onSubmit={form.handleSubmit((values) =>
-                submitMutation.mutate(values as OnboardingInput),
-              )}
-            >
-              <Field label="Full name">
-                <Input {...form.register('name')} placeholder="Min Thu" />
-              </Field>
+          <form
+            className="mt-6 grid gap-4"
+            onSubmit={form.handleSubmit((values) => submitMutation.mutate(values as OnboardingInput))}
+          >
+            <Field label="Full name">
+              <Input {...form.register('name')} placeholder="Min Thu" />
+            </Field>
+
+            <div className="grid gap-4 md:grid-cols-2">
               <Field label="Polytechnic">
-                <select
-                  className="h-10 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                  {...form.register('polytechnic')}
-                >
+                <Select {...form.register('polytechnic')}>
                   {polytechnics.map((polytechnic) => (
                     <option key={polytechnic} value={polytechnic}>
                       {polytechnic}
                     </option>
                   ))}
-                </select>
-              </Field>
-              <Field label="Course">
-                <Input {...form.register('course')} placeholder="Diploma in..." />
+                </Select>
               </Field>
               <Field label="Graduation year">
                 <Input {...form.register('graduationYear')} inputMode="numeric" />
               </Field>
-              <Field label="LinkedIn profile">
-                <Input {...form.register('linkedinUrl')} placeholder="https://linkedin.com/in/..." />
+            </div>
+
+            <Field label="Course">
+              <Input {...form.register('course')} placeholder="Diploma in..." />
+            </Field>
+
+            <Field label="LinkedIn" hint="Required for club verification.">
+              <Input {...form.register('linkedinUrl')} placeholder="https://linkedin.com/in/..." />
+            </Field>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="GitHub">
+                <Input {...form.register('githubUrl')} placeholder="Optional" />
               </Field>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="GitHub">
-                  <Input {...form.register('githubUrl')} placeholder="Optional" />
-                </Field>
-                <Field label="Portfolio">
-                  <Input {...form.register('portfolioUrl')} placeholder="Optional" />
-                </Field>
-              </div>
+              <Field label="Portfolio">
+                <Input {...form.register('portfolioUrl')} placeholder="Optional" />
+              </Field>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
               <Field label="Skills">
                 <Textarea {...form.register('skills')} rows={3} />
               </Field>
-              <Field label="Hobbies">
+              <Field label="Interests">
                 <Textarea {...form.register('hobbies')} rows={3} />
               </Field>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Status badge">
-                  <select
-                    className="h-10 w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm"
-                    {...form.register('statusBadge')}
-                  >
-                    {studentStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <div className="space-y-2">
-                  <Label>Availability</Label>
-                  <div className="flex flex-wrap gap-2">
-                    <label className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm">
-                      <input type="checkbox" {...form.register('openToCollab')} />
-                      Open to collab
-                    </label>
-                    <label className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm">
-                      <input type="checkbox" {...form.register('jobSeeking')} />
-                      Job seeking
-                    </label>
-                  </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Status">
+                <Select {...form.register('statusBadge')}>
+                  {studentStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <div className="space-y-2">
+                <Label>Signals</Label>
+                <div className="flex flex-wrap gap-2">
+                  <label className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/84 px-4 py-3 text-sm">
+                    <input type="checkbox" {...form.register('openToCollab')} />
+                    Open to collab
+                  </label>
+                  <label className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/84 px-4 py-3 text-sm">
+                    <input type="checkbox" {...form.register('jobSeeking')} />
+                    Job seeking
+                  </label>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={submitMutation.isPending}>
-                {submitMutation.isPending ? 'Submitting...' : 'Submit for review'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+
+            <Button type="submit" className="mt-2 w-full" disabled={submitMutation.isPending}>
+              {submitMutation.isPending ? 'Sending application...' : 'Apply for access'}
+              {!submitMutation.isPending ? <ArrowRight className="h-4 w-4" /> : null}
+            </Button>
+          </form>
+        </div>
+      </section>
     </div>
   )
 }
