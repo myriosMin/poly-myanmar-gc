@@ -1,0 +1,17 @@
+[project]
+name = "worker"
+version = "0.1.0"
+description = "Poly Myanmar GC background worker"
+readme = "README.md"
+authors = [
+    { name = "myriosMin", email = "minmyrios@gmail.com" }
+]
+requires-python = ">=3.11.11"
+dependencies = []
+
+[project.scripts]
+worker = "worker:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

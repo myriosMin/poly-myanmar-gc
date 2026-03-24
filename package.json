@@ -1,0 +1,29 @@
+{
+  "name": "poly-myanmar-gc",
+  "version": "0.1.0",
+  "description": "Private networking platform for Myanmar polytechnic students and graduates in Singapore.",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace web",
+    "build:web": "npm run build --workspace web",
+    "lint:web": "npm run lint --workspace web",
+    "dev:api": "uv run --directory apps/api uvicorn api.main:app --reload",
+    "dev:worker": "uv run --directory apps/worker python -m worker.main"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myriosMin/poly-myanmar-gc.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/myriosMin/poly-myanmar-gc/issues"
+  },
+  "homepage": "https://github.com/myriosMin/poly-myanmar-gc#readme"
+}

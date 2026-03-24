@@ -1,0 +1,20 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Poly Myanmar GC API service"
+readme = "README.md"
+authors = [
+    { name = "myriosMin", email = "minmyrios@gmail.com" }
+]
+requires-python = ">=3.11.11"
+dependencies = [
+    "fastapi>=0.116.1",
+    "uvicorn>=0.35.0",
+]
+
+[project.scripts]
+api = "api.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
