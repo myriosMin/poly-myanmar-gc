@@ -7,7 +7,11 @@ authors = [
     { name = "myriosMin", email = "minmyrios@gmail.com" }
 ]
 requires-python = ">=3.11.11"
-dependencies = []
+dependencies = [
+    "apscheduler>=3.11.2",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.13.1",
+]
 
 [project.scripts]
 worker = "worker.main:main"

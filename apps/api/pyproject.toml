@@ -9,6 +9,10 @@ authors = [
 requires-python = ">=3.11.11"
 dependencies = [
     "fastapi>=0.116.1",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.13.1",
+    "pyjwt>=2.12.1",
+    "python-telegram-bot>=22.7",
     "uvicorn>=0.35.0",
 ]
 
