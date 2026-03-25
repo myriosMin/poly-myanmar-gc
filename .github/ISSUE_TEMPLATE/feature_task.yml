@@ -1,0 +1,54 @@
+name: Feature or task
+description: Propose a product, integration, or contributor task.
+title: "[Task] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be built or improved?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - web
+        - api
+        - worker
+        - supabase
+        - docs
+        - github automation
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and constraints
+      description: Mention in-scope behavior, out-of-scope behavior, and any constraints.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Bullet the conditions for completion.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: integration_level
+    attributes:
+      label: Integration level
+      options:
+        - real integration
+        - mock or scaffold
+        - undecided
+    validations:
+      required: true

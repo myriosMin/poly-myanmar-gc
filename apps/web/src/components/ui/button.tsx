@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold tracking-[-0.01em] transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -14,16 +14,16 @@ const buttonVariants = cva(
         secondary:
           'bg-secondary text-secondary-foreground shadow-[0_12px_30px_-20px_hsla(var(--shadow-color),0.35)] hover:-translate-y-0.5 hover:brightness-[0.98]',
         outline:
-          'border border-border/70 bg-background/75 text-foreground hover:-translate-y-0.5 hover:bg-muted/70',
+          'border border-border/70 bg-background/80 text-foreground hover:-translate-y-0.5 hover:bg-muted/70',
         ghost: 'text-foreground/80 hover:bg-muted/80 hover:text-foreground',
         destructive:
           'bg-destructive text-destructive-foreground shadow-[0_16px_40px_-20px_rgba(190,52,52,0.45)] hover:-translate-y-0.5 hover:opacity-95',
       },
       size: {
-        default: 'h-11 px-5 py-2.5',
+        default: 'h-[var(--control-height)] px-5',
         sm: 'h-9 px-3.5 text-xs',
         lg: 'h-12 px-6 text-sm',
-        icon: 'h-11 w-11',
+        icon: 'h-[var(--control-height)] w-[var(--control-height)]',
       },
     },
     defaultVariants: {

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 
 interface EmptyStateProps {
   title: string
@@ -18,20 +17,18 @@ export function EmptyState({
   icon,
 }: EmptyStateProps) {
   return (
-    <Card className="card-float border-dashed border-border/70 bg-card/80 shadow-none">
-      <CardContent className="flex flex-col items-start gap-5 p-8">
+    <div className="surface-panel card-float flex flex-col items-start gap-5 border-dashed border-border/70 bg-card/80 p-8 shadow-none">
         {icon}
         <div className="space-y-2">
           <p className="section-kicker">Nothing yet</p>
-          <p className="font-display text-2xl font-semibold">{title}</p>
-          <p className="max-w-lg text-sm text-muted-foreground">{description}</p>
+          <p className="section-title">{title}</p>
+          <p className="body-copy max-w-lg">{description}</p>
         </div>
         {actionLabel && onAction ? (
           <Button onClick={onAction} variant="outline">
             {actionLabel}
           </Button>
         ) : null}
-      </CardContent>
-    </Card>
+    </div>
   )
 }

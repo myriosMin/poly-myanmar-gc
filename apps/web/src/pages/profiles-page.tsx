@@ -4,7 +4,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowUpRight,
   BriefcaseBusiness,
+  CalendarDays,
   Filter,
+  Github,
+  Globe,
   Linkedin,
   Search,
   UsersRound,
@@ -18,6 +21,7 @@ import { EmptyState } from '@/components/layout/empty-state'
 import { PageHeader } from '@/components/layout/page-header'
 import { mockApi } from '@/lib/mock-api'
 import { studentStatuses, type ProfileFilters } from '@/lib/domain'
+import { formatDate } from '@/lib/utils'
 
 const defaultFilters: ProfileFilters = {
   polytechnic: '',
@@ -48,6 +52,34 @@ function ProfileOverlay({
   profile: Awaited<ReturnType<typeof mockApi.getProfiles>>['items'][number]
   onClose: () => void
 }) {
+  const socialLinks = [
+    {
+      label: 'LinkedIn',
+      href: profile.linkedinUrl,
+      icon: Linkedin,
+    },
+    profile.githubUrl
+      ? {
+          label: 'GitHub',
+          href: profile.githubUrl,
+          icon: Github,
+        }
+      : null,
+    profile.portfolioUrl
+      ? {
+          label: 'Portfolio',
+          href: profile.portfolioUrl,
+          icon: Globe,
+        }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; href: string; icon: typeof Linkedin }>
+
+  const statuses = [
+    profile.statusBadge,
+    ...(profile.jobSeeking ? ['job seeking'] : []),
+    ...(profile.openToCollab ? ['open to collab'] : []),
+  ]
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -73,7 +105,7 @@ function ProfileOverlay({
         onClick={onClose}
       />
 
-      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-0 pb-6 pt-0 md:px-0 md:pb-8 md:pt-0">
+      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-0 pb-6 pt-0 md:pb-8">
         <div className="surface-blur flex items-center justify-between rounded-b-[2rem] rounded-t-none px-4 py-4 md:px-6">
           <div>
             <p className="section-kicker">Member profile</p>
@@ -84,130 +116,155 @@ function ProfileOverlay({
           </Button>
         </div>
 
-        <div className="mt-4 grid flex-1 gap-6 px-4 md:px-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="surface-panel rounded-[2rem] p-8">
-            <div className="flex flex-wrap items-start justify-between gap-6">
-              <div className="flex items-start gap-5">
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.name}
-                  className="h-28 w-24 rounded-[1.5rem] object-cover md:h-36 md:w-28"
-                />
-                <div>
-                  <p className="section-kicker">{profile.polytechnic}</p>
-                  <h2 className="mt-3 font-display text-5xl font-semibold">{profile.name}</h2>
-                  <p className="mt-4 max-w-2xl text-base text-muted-foreground">
-                    {profile.course} • Class of {profile.graduationYear}
-                  </p>
+        <div className="mt-4 grid flex-1 gap-6 px-4 md:px-6 lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
+          <aside className="surface-panel h-fit rounded-[2rem] p-6 md:p-7 lg:sticky lg:top-24">
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="mx-auto h-40 w-40 rounded-full border border-border/60 object-cover md:h-48 md:w-48"
+            />
+            <div className="mt-5">
+              <h2 className="font-display text-4xl font-semibold leading-none">{profile.name}</h2>
+              <p className="mt-3 text-sm text-muted-foreground">{profile.polytechnic}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{profile.course}</p>
+            </div>
+
+            <div className="soft-divider mt-6 pt-6 text-sm">
+              <div className="flex items-center justify-between gap-4 py-2">
+                <span className="text-muted-foreground">Class of</span>
+                <span className="font-medium text-foreground">{profile.graduationYear}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4 py-2">
+                <span className="text-muted-foreground">Joined on</span>
+                <span className="font-medium text-foreground">{formatDate(profile.joinedAt)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4 py-2">
+                <span className="text-muted-foreground">Email</span>
+                <span className="truncate text-right font-medium text-foreground">
+                  {profile.gmail}
+                </span>
+              </div>
+            </div>
+          </aside>
+
+          <div className="space-y-4">
+            <section className="surface-panel rounded-[2rem] p-6 md:p-7">
+              <p className="section-kicker">Socials</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {socialLinks.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Button key={item.label} asChild variant="outline" size="sm">
+                      <a href={item.href} target="_blank" rel="noreferrer">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </a>
+                    </Button>
+                  )
+                })}
+              </div>
+            </section>
+
+            <section className="surface-panel rounded-[2rem] p-6 md:p-7">
+              <p className="section-kicker">Status</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {statuses.map((status) => (
+                  <Badge key={status} variant="secondary">
+                    {status}
+                  </Badge>
+                ))}
+              </div>
+            </section>
+
+            <section className="surface-panel rounded-[2rem] p-6 md:p-7">
+              <p className="section-kicker">About</p>
+              <p className="mt-4 max-w-3xl text-sm text-foreground">{profile.bio}</p>
+            </section>
+
+            <section className="grid gap-4 xl:grid-cols-2">
+              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
+                <p className="section-kicker">Skills</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {profile.skills.map((skill) => (
+                    <Badge key={skill} variant="outline">
+                      {skill}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-              <Badge variant="secondary">{profile.statusBadge}</Badge>
-            </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {profile.openToCollab ? <Badge variant="secondary">Open to collab</Badge> : null}
-              {profile.jobSeeking ? <Badge variant="secondary">Job seeking</Badge> : null}
-              {profile.badges.map((badge) => (
-                <Badge key={badge} variant="outline">
-                  {badge}
-                </Badge>
-              ))}
-            </div>
+              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
+                <p className="section-kicker">Hobbies</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {profile.hobbies.map((hobby) => (
+                    <Badge key={hobby} variant="outline">
+                      {hobby}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <div className="rounded-[1.7rem] bg-muted/62 p-5">
-                <p className="section-kicker">What they do</p>
-                <p className="mt-3 text-sm text-foreground">{profile.skills.join(' • ')}</p>
-              </div>
-              <div className="rounded-[1.7rem] bg-muted/62 p-5">
-                <p className="section-kicker">Beyond class</p>
-                <p className="mt-3 text-sm text-foreground">{profile.hobbies.join(' • ')}</p>
-              </div>
-            </div>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.7rem] border border-border/60 bg-background/74 p-5">
-                <p className="section-kicker">Availability</p>
-                <p className="mt-3 font-medium">
-                  {profile.openToCollab ? 'Open to projects' : 'Keeping things light for now'}
-                </p>
-              </div>
-              <div className="rounded-[1.7rem] border border-border/60 bg-background/74 p-5">
-                <p className="section-kicker">Career</p>
-                <p className="mt-3 font-medium">
-                  {profile.jobSeeking ? 'Exploring opportunities' : 'Not actively searching'}
-                </p>
-              </div>
-              <div className="rounded-[1.7rem] border border-border/60 bg-background/74 p-5">
+            <section className="grid gap-4 xl:grid-cols-2">
+              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
                 <p className="section-kicker">Events</p>
-                <p className="mt-3 font-medium">
-                  {profile.attendingEvents ? 'Usually active at events' : 'Less event-focused'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-6">
-            <div className="surface-panel rounded-[2rem] bg-primary p-8 text-primary-foreground">
-              <p className="section-kicker text-primary-foreground/70">Reach out</p>
-              <p className="mt-3 font-display text-3xl font-semibold">
-                Start with context, not a cold ask.
-              </p>
-              <p className="mt-3 text-sm text-primary-foreground/82">
-                Mention the event, role, or project you have in mind so the conversation starts
-                naturally.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild variant="secondary">
-                  <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
-                    <Linkedin className="h-4 w-4" />
-                    LinkedIn
-                  </a>
-                </Button>
-                {profile.githubUrl ? (
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="border-white/25 bg-white/10 text-white hover:bg-white/15"
-                  >
-                    <a href={profile.githubUrl} target="_blank" rel="noreferrer">
-                      GitHub
-                    </a>
-                  </Button>
-                ) : null}
-                {profile.portfolioUrl ? (
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="border-white/25 bg-white/10 text-white hover:bg-white/15"
-                  >
-                    <a href={profile.portfolioUrl} target="_blank" rel="noreferrer">
-                      Portfolio
-                    </a>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="surface-panel rounded-[2rem] p-8">
-              <p className="section-kicker">Private member details</p>
-              <div className="mt-5 space-y-4 text-sm text-muted-foreground">
-                <div>
-                  <p className="text-foreground">Email</p>
-                  <p>{profile.gmail}</p>
+                <div className="mt-4 space-y-3">
+                  {profile.eventHistory.length ? (
+                    profile.eventHistory.map((event) => (
+                      <div
+                        key={event.id}
+                        className="rounded-[1.4rem] border border-border/60 bg-background/70 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">{event.title}</p>
+                            <div className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                              <CalendarDays className="h-4 w-4 text-primary" />
+                              {formatDate(event.date)}
+                            </div>
+                          </div>
+                          <Badge variant={event.status === 'going' ? 'secondary' : 'outline'}>
+                            {event.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No event activity yet.</p>
+                  )}
                 </div>
-                <div>
-                  <p className="text-foreground">LinkedIn</p>
-                  <p>{profile.linkedinUrl}</p>
-                </div>
-                {profile.portfolioUrl ? (
-                  <div>
-                    <p className="text-foreground">Portfolio</p>
-                    <p>{profile.portfolioUrl}</p>
-                  </div>
-                ) : null}
               </div>
-            </div>
+
+              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
+                <p className="section-kicker">Projects</p>
+                <div className="mt-4 space-y-3">
+                  {profile.collabHistory.length ? (
+                    profile.collabHistory.map((project) => (
+                      <div
+                        key={project.id}
+                        className="rounded-[1.4rem] border border-border/60 bg-background/70 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">{project.title}</p>
+                            {project.deadline ? (
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                Deadline {formatDate(project.deadline)}
+                              </p>
+                            ) : null}
+                          </div>
+                          <Badge variant={project.status === 'member' ? 'secondary' : 'outline'}>
+                            {project.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No project activity yet.</p>
+                  )}
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -277,11 +334,11 @@ export function ProfilesPage() {
   }
 
   const sidebar = (
-    <div className="lg:sticky lg:top-28">
-      <div className="surface-panel overflow-hidden rounded-[2rem] p-0">
+    <div className="sticky-rail">
+      <div className="surface-panel overflow-hidden p-0">
         <div className="border-b border-border/55 px-6 py-5">
           <p className="section-kicker">Who are you looking for?</p>
-          <p className="mt-2 font-display text-2xl font-semibold">Filter by</p>
+          <p className="section-title mt-2 !text-[2rem]">Filter by</p>
         </div>
 
         <div className="space-y-0">

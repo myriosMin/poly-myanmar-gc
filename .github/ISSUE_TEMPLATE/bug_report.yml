@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a broken flow, UI problem, or backend defect.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: The profiles page crashes when filters are changed.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - web
+        - api
+        - worker
+        - supabase
+        - github automation
+        - docs
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: List the exact steps to reproduce the issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Logs or screenshots
+      description: Paste errors, screenshots, or links if relevant.

@@ -1,13 +1,17 @@
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { CalendarDays, Filter, MapPin, Users, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/layout/empty-state'
+import { MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
 import { mockApi } from '@/lib/mock-api'
-import { formatDateTime } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 
 export function EventsPage() {
+  const [kindFilter, setKindFilter] = useState('')
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const queryClient = useQueryClient()
   const eventsQuery = useQuery({
     queryKey: ['events'],
@@ -22,124 +26,196 @@ export function EventsPage() {
     },
   })
 
+  const filteredEvents = useMemo(() => {
+    if (!eventsQuery.data?.items) {
+      return []
+    }
+
+    if (!kindFilter) {
+      return eventsQuery.data.items
+    }
+
+    return eventsQuery.data.items.filter((event) => event.kind === kindFilter)
+  }, [eventsQuery.data?.items, kindFilter])
+
+  const sidebar = (
+    <div className="filter-panel sticky-rail">
+      <div className="flex items-start justify-between gap-4 lg:block">
+        <div>
+          <p className="section-kicker">Event type</p>
+          <p className="section-title mt-3">Filter the calendar</p>
+          <p className="body-copy mt-2">
+            Start by the kind of moment you want to join.
+          </p>
+        </div>
+
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          className="lg:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+          aria-label="Close filters"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => setKindFilter('')}
+          className={cn(
+            'filter-option',
+            kindFilter === '' && 'filter-option-active',
+          )}
+        >
+          <p className="text-sm font-semibold">All events</p>
+          <p
+            className={cn(
+              'mt-1 text-sm',
+              kindFilter === '' ? 'text-primary-foreground/78' : 'text-muted-foreground',
+            )}
+          >
+            {eventsQuery.data?.total ?? 0} total
+          </p>
+        </button>
+
+        {eventsQuery.data?.kinds.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            onClick={() => {
+              setKindFilter(item.value)
+              setShowMobileSidebar(false)
+            }}
+            className={cn(
+              'filter-option',
+              kindFilter === item.value && 'filter-option-active',
+            )}
+          >
+            <p className="text-sm font-semibold capitalize">{item.value}</p>
+            <p
+              className={cn(
+                'mt-1 text-sm',
+                kindFilter === item.value ? 'text-primary-foreground/78' : 'text-muted-foreground',
+              )}
+            >
+              {item.count} event{item.count === 1 ? '' : 's'}
+            </p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Events"
-        title="Show up with context before the opportunity starts."
-        description="The event view stays light: what it is, when it happens, where it is, and whether you want in."
+        title="See the right event, decide quickly, and RSVP."
+        description="Keep the calendar useful: filter by type, scan the essentials, and commit without extra clutter."
         actions={
-          <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
-            {eventsQuery.data?.total ?? 0} upcoming
-          </Badge>
+          <>
+            <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+              {filteredEvents.length} visible
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 px-4 lg:hidden"
+              onClick={() => setShowMobileSidebar(true)}
+            >
+              <Filter className="h-3.5 w-3.5" />
+              Filters
+            </Button>
+          </>
         }
       />
 
-      <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="surface-panel rounded-[2rem] p-8">
-          <p className="section-kicker">Event rhythm</p>
-          <p className="mt-3 max-w-lg font-display text-4xl font-semibold">
-            Career fairs, warm-ups, hack nights, and small useful gatherings.
-          </p>
-          <p className="mt-4 max-w-md text-sm text-muted-foreground">
-            RSVP quickly, see who is already in, and use the calendar to create better
-            introductions before you arrive.
-          </p>
+      <section className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+        <aside className="hidden lg:block">{sidebar}</aside>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {eventsQuery.data?.kinds.map((item) => (
-              <div key={item.value} className="rounded-[1.6rem] bg-muted/62 p-4">
-                <p className="section-kicker">{item.value}</p>
-                <p className="mt-2 font-display text-3xl font-semibold">{item.count}</p>
+        <div className="space-y-4">
+          {filteredEvents.length ? (
+            filteredEvents.map((event) => (
+              <div key={event.id} className="content-row">
+                <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
+                  <div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">{event.kind}</Badge>
+                      <Badge variant="outline">{event.source}</Badge>
+                    </div>
+                    <h2 className="mt-4 max-w-2xl font-display text-4xl font-semibold">
+                      {event.title}
+                    </h2>
+                    <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+                      {event.description}
+                    </p>
+                  </div>
+
+                  <div className="meta-block text-right">
+                    <p className="section-kicker">Your RSVP</p>
+                    <p className="mt-2 text-sm font-medium capitalize">
+                      {event.myRsvp.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-3 md:grid-cols-3">
+                  <div className="meta-block">
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    <p className="mt-3 text-muted-foreground">When</p>
+                    <p className="mt-1 font-medium text-foreground">{formatDateTime(event.startsAt)}</p>
+                  </div>
+                  <div className="meta-block">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <p className="mt-3 text-muted-foreground">Where</p>
+                    <p className="mt-1 font-medium text-foreground">{event.location}</p>
+                  </div>
+                  <div className="meta-block">
+                    <Users className="h-4 w-4 text-primary" />
+                    <p className="mt-3 text-muted-foreground">Attendance</p>
+                    <p className="mt-1 font-medium text-foreground">
+                      {event.attendees.length}/{event.capacity} going
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Attending: {event.attendees.join(', ') || 'No attendees yet'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(['going', 'interested', 'not_going'] as const).map((status) => (
+                      <Button
+                        key={status}
+                        variant={event.myRsvp === status ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => rsvpMutation.mutate({ id: event.id, status })}
+                        disabled={rsvpMutation.isPending}
+                      >
+                        {status.replace('_', ' ')}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="surface-panel rounded-[2rem] bg-primary p-8 text-primary-foreground">
-          <p className="section-kicker text-primary-foreground/70">Best use of this page</p>
-          <p className="mt-3 max-w-md font-display text-4xl font-semibold">
-            See the event, decide the signal, and move on.
-          </p>
-          <p className="mt-4 max-w-md text-sm text-primary-foreground/82">
-            The point is not endless browsing. It is quick commitment around moments that matter.
-          </p>
+            ))
+          ) : (
+            <EmptyState
+              title="No events match this filter"
+              description="Try another event type to widen the calendar."
+              actionLabel="Show all events"
+              onAction={() => setKindFilter('')}
+            />
+          )}
         </div>
       </section>
 
-      <div className="space-y-4">
-        {eventsQuery.data?.items.length ? (
-          eventsQuery.data.items.map((event) => (
-            <div key={event.id} className="surface-panel card-float rounded-[2rem] p-7">
-              <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
-                <div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{event.kind}</Badge>
-                    <Badge variant="outline">{event.source}</Badge>
-                  </div>
-                  <h2 className="mt-4 max-w-2xl font-display text-4xl font-semibold">
-                    {event.title}
-                  </h2>
-                  <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-                    {event.description}
-                  </p>
-                </div>
-
-                <div className="rounded-[1.6rem] bg-muted/62 px-4 py-3 text-right">
-                  <p className="section-kicker">Your RSVP</p>
-                  <p className="mt-2 text-sm font-medium capitalize">
-                    {event.myRsvp.replace('_', ' ')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
-                <div className="rounded-[1.5rem] bg-background/80 p-4 text-sm">
-                  <CalendarDays className="h-4 w-4 text-primary" />
-                  <p className="mt-3 text-muted-foreground">When</p>
-                  <p className="mt-1 font-medium text-foreground">{formatDateTime(event.startsAt)}</p>
-                </div>
-                <div className="rounded-[1.5rem] bg-background/80 p-4 text-sm">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <p className="mt-3 text-muted-foreground">Where</p>
-                  <p className="mt-1 font-medium text-foreground">{event.location}</p>
-                </div>
-                <div className="rounded-[1.5rem] bg-background/80 p-4 text-sm">
-                  <Users className="h-4 w-4 text-primary" />
-                  <p className="mt-3 text-muted-foreground">Attendance</p>
-                  <p className="mt-1 font-medium text-foreground">
-                    {event.attendees.length}/{event.capacity} going
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Attending: {event.attendees.join(', ') || 'No attendees yet'}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(['going', 'interested', 'not_going'] as const).map((status) => (
-                    <Button
-                      key={status}
-                      variant={event.myRsvp === status ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => rsvpMutation.mutate({ id: event.id, status })}
-                      disabled={rsvpMutation.isPending}
-                    >
-                      {status.replace('_', ' ')}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <EmptyState
-            title="No events yet"
-            description="New meetups and curated opportunities will appear here."
-          />
-        )}
-      </div>
+      <MobileDrawer open={showMobileSidebar} onClose={() => setShowMobileSidebar(false)}>
+        {sidebar}
+      </MobileDrawer>
     </div>
   )
 }

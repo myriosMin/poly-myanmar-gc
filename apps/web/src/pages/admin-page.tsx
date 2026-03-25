@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ban, Check, ShieldAlert, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/layout/empty-state'
 import { PageHeader } from '@/components/layout/page-header'
 import { mockApi } from '@/lib/mock-api'
@@ -42,30 +41,28 @@ export function AdminPage() {
           ['draft_event', 'Draft events'],
           ['collab_flag', 'Flags'],
         ].map(([key, label]) => (
-          <Card key={key} className="bg-card/82">
-            <CardContent className="p-6">
+          <div key={key} className="surface-panel bg-card/82 p-6">
               <p className="section-kicker">{label}</p>
-              <p className="mt-2 font-display text-3xl font-semibold">
+              <p className="section-title mt-2 !text-[2rem]">
                 {adminQuery.data?.totals[key] ?? 0}
               </p>
-            </CardContent>
-          </Card>
+          </div>
         ))}
       </div>
 
       {adminQuery.data?.items.length ? (
         <div className="grid gap-4 xl:grid-cols-2">
           {adminQuery.data.items.map((item) => (
-            <Card key={item.id} className="card-float bg-card/88">
-              <CardContent className="space-y-5 p-7">
+            <div key={item.id} className="content-row bg-card/88">
+              <div className="space-y-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <Badge variant="secondary">{item.type}</Badge>
-                    <p className="mt-4 font-display text-3xl font-semibold">{item.title}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">{item.summary}</p>
+                    <p className="section-title mt-4">{item.title}</p>
+                    <p className="body-copy mt-2 !text-sm">{item.summary}</p>
                   </div>
                 </div>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="micro-copy uppercase tracking-[0.18em]">
                   {item.submittedBy} • {new Date(item.createdAt).toLocaleString()}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -115,8 +112,8 @@ export function AdminPage() {
                     </Button>
                   ) : null}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
