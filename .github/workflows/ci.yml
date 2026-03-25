@@ -12,6 +12,9 @@ jobs:
   web:
     name: Web
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: zsh
 
     steps:
       - name: Check out repository
@@ -35,6 +38,9 @@ jobs:
   backend:
     name: API and Worker
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: zsh
 
     steps:
       - name: Check out repository
