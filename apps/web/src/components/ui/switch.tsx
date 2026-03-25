@@ -8,7 +8,7 @@ const Switch = React.forwardRef<
   return (
     <label
       className={cn(
-        'inline-flex cursor-pointer items-center gap-3 rounded-full border border-border/70 bg-background/80 px-3 py-2 text-sm text-foreground shadow-[0_12px_30px_-24px_rgba(39,27,18,0.28)]',
+        'inline-flex h-[var(--control-height)] cursor-pointer items-center gap-3 rounded-full border border-border/70 bg-background/80 px-4 text-sm text-foreground shadow-[0_12px_30px_-24px_rgba(39,27,18,0.28)]',
         className,
       )}
     >
