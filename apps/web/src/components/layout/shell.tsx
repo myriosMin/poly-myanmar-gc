@@ -166,19 +166,34 @@ export function AppShell() {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  const pageTheme =
+    location.pathname === '/events'
+      ? 'events'
+      : location.pathname === '/resources'
+        ? 'resources'
+        : location.pathname === '/collab'
+          ? 'collab'
+          : location.pathname === '/settings'
+            ? 'settings'
+            : 'profiles'
+
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname])
 
+  useEffect(() => {
+    document.documentElement.dataset.pageTheme = pageTheme
+  }, [pageTheme])
+
   return (
-    <div className="min-h-screen bg-shell-gradient text-foreground">
+    <div className="min-h-screen app-shell-background text-foreground">
       <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-28">
         <div className="h-full bg-background/55 backdrop-blur-md [mask-image:linear-gradient(180deg,rgba(0,0,0,0.92),rgba(0,0,0,0.58),transparent)]" />
       </div>
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="editorial-grid absolute inset-x-0 top-0 h-72 opacity-60" />
-        <div className="absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full bg-[#c98d63]/20 blur-3xl" />
-        <div className="absolute right-[-4rem] top-24 h-64 w-64 rounded-full bg-[#789a84]/20 blur-3xl" />
+        <div className="shell-glow-left absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full blur-3xl" />
+        <div className="shell-glow-right absolute right-[-4rem] top-24 h-64 w-64 rounded-full blur-3xl" />
       </div>
       <div className="relative mx-auto flex min-h-screen max-w-[1500px] flex-col px-4 pb-10 pt-4 md:px-6">
         <header className="surface-blur sticky top-4 z-30 rounded-[2rem] px-4 py-4 md:px-6">
@@ -229,15 +244,23 @@ export function AppShell() {
 }
 
 export function PublicShell({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    document.documentElement.dataset.pageTheme = 'public'
+
+    return () => {
+      delete document.documentElement.dataset.pageTheme
+    }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-shell-gradient text-foreground">
+    <div className="min-h-screen app-shell-background text-foreground">
       <div className="pointer-events-none fixed inset-x-0 top-0 z-20 h-28">
         <div className="h-full bg-background/55 backdrop-blur-md [mask-image:linear-gradient(180deg,rgba(0,0,0,0.92),rgba(0,0,0,0.58),transparent)]" />
       </div>
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="editorial-grid absolute inset-x-0 top-0 h-96 opacity-70" />
-        <div className="absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full bg-[#c98d63]/20 blur-3xl" />
-        <div className="absolute right-[-4rem] top-24 h-64 w-64 rounded-full bg-[#789a84]/20 blur-3xl" />
+        <div className="shell-glow-left absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full blur-3xl" />
+        <div className="shell-glow-right absolute right-[-4rem] top-24 h-64 w-64 rounded-full blur-3xl" />
       </div>
       <div className="relative mx-auto flex min-h-screen max-w-[1480px] flex-col px-4 py-4 md:px-6">
         <header className="surface-blur sticky top-4 z-20 rounded-[2rem] px-4 py-4 md:px-6">

@@ -80,6 +80,8 @@ export interface DirectoryProfile {
   polytechnic: Polytechnic
   course: string
   graduationYear: number
+  joinedAt: string
+  bio: string
   skills: string[]
   hobbies: string[]
   portfolioUrl?: string
@@ -91,6 +93,18 @@ export interface DirectoryProfile {
   attendingEvents: boolean
   jobSeeking: boolean
   badges: StudentStatus[]
+  eventHistory: Array<{
+    id: string
+    title: string
+    status: 'going' | 'interested'
+    date: string
+  }>
+  collabHistory: Array<{
+    id: string
+    title: string
+    status: 'member' | 'interested'
+    deadline?: string
+  }>
 }
 
 export interface EventItem {

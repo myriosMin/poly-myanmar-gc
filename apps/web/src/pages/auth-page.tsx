@@ -87,7 +87,7 @@ export function AuthPage() {
               <h1 className="mt-5 max-w-3xl font-display text-5xl font-semibold leading-[0.96] md:text-7xl">
                 Warm access to the right people, events, and opportunities.
               </h1>
-              <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
+              <p className="body-copy mt-5 max-w-xl !text-base md:!text-lg">
                 Poly Myanmar keeps discovery focused: who to meet, what to attend, and where to
                 build together next.
               </p>
@@ -117,10 +117,10 @@ export function AuthPage() {
                   style={{ animationDelay: `${index * 90}ms` }}
                 >
                   <item.icon className="h-5 w-5 text-primary" />
-                  <p className="mt-5 font-display text-[1.9rem] font-semibold leading-tight">
+                  <p className="section-title mt-5 !text-[1.9rem] leading-tight">
                     {item.title}
                   </p>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
+                  <p className="body-copy mt-2 !text-sm">{item.body}</p>
                 </div>
               ))}
             </div>
@@ -128,13 +128,13 @@ export function AuthPage() {
             <div className="grid gap-4 border-t border-border/60 pt-6 md:grid-cols-[0.7fr_1.3fr]">
               <div>
                 <p className="section-kicker">Why the club matters</p>
-                <p className="mt-3 font-display text-3xl font-semibold leading-tight">
+                <p className="section-title mt-3 leading-tight">
                   Small enough to feel personal. Serious enough to shape your next step.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 {['Members discover each other faster', 'Events stay opportunity-led', 'Collab starts with clear intent'].map((line) => (
-                  <div key={line} className="rounded-[1.5rem] border border-border/60 bg-card/58 p-4 text-sm text-muted-foreground">
+                  <div key={line} className="surface-inset p-4 text-sm text-muted-foreground">
                     {line}
                   </div>
                 ))}
@@ -143,12 +143,12 @@ export function AuthPage() {
           </div>
         </div>
 
-        <div className="surface-panel page-reveal rounded-[2rem] p-6 md:p-8">
+        <div className="surface-panel page-reveal p-6 md:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="section-kicker">Join Poly Myanmar</p>
-              <h2 className="mt-3 font-display text-4xl font-semibold">Apply for access</h2>
-              <p className="mt-3 max-w-md text-sm text-muted-foreground">
+              <h2 className="section-title mt-3">Apply for access</h2>
+              <p className="body-copy mt-3 max-w-md !text-sm">
                 Keep it concise. LinkedIn is required because approvals stay human and trust-led.
               </p>
             </div>
@@ -157,7 +157,7 @@ export function AuthPage() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             {['Add profile basics', 'Share credibility links', 'Wait for review'].map((step, index) => (
-              <div key={step} className="rounded-[1.4rem] bg-muted/62 p-4">
+              <div key={step} className="surface-inset p-4">
                 <p className="section-kicker">0{index + 1}</p>
                 <p className="mt-2 text-sm font-medium">{step}</p>
               </div>
