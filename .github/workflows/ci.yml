@@ -12,13 +12,13 @@ jobs:
   web:
     name: Web
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: zsh
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+
+      - name: Install zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -38,13 +38,13 @@ jobs:
   backend:
     name: API and Worker
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: zsh
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+
+      - name: Install zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh
 
       - name: Set up Python
         uses: actions/setup-python@v5
