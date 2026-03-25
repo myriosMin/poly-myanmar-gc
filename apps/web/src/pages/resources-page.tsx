@@ -120,15 +120,13 @@ export function ResourcesPage() {
   })
 
   const filteredResources = useMemo(() => {
-    if (!resourcesQuery.data?.items) {
-      return []
-    }
+    const items = resourcesQuery.data?.items ?? []
 
     if (!categoryFilter) {
-      return resourcesQuery.data.items
+      return items
     }
 
-    return resourcesQuery.data.items.filter((resource) =>
+    return items.filter((resource) =>
       resource.categories.includes(categoryFilter),
     )
   }, [categoryFilter, resourcesQuery.data?.items])
