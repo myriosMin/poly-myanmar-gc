@@ -1,0 +1,11 @@
+# Replace or extend these owners with your teammates' GitHub usernames.
+
+* @myriosMin
+
+/apps/web/ @myriosMin
+/apps/api/ @myriosMin
+/apps/worker/ @myriosMin
+/supabase/ @myriosMin
+/docs/ @myriosMin
+/packages/contracts/ @myriosMin
+/Makefile @myriosMin
