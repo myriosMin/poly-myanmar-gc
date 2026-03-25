@@ -27,7 +27,7 @@ This repo is currently in a scaffolded MVP state. The product shape exists acros
 
 - Private member app shell and routed pages
 - Mocked auth/onboarding flow in the frontend
-- Profiles, events, resources, collab, admin, settings, and legal pages
+- Profiles, events, resources, collab, admin, settings, and legal pages *[Only the Profiles page design is finalized, the rest UI/UX need to be improved]*
 - FastAPI route coverage for the main product domains
 - Worker skeleton for weekly event sourcing and alert-style jobs
 - Initial Supabase schema, enums, indexes, and RLS model
