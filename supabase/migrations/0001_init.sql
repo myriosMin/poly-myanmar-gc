@@ -21,6 +21,30 @@ begin
 end;
 $$;
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text not null unique,
+  google_subject text not null unique,
+  role app_role not null default 'member',
+  approval_status approval_state not null default 'pending',
+  name text not null,
+  polytechnic text not null,
+  course text not null,
+  graduation_year integer not null,
+  linkedin_url text not null,
+  github_url text,
+  portfolio_url text,
+  skills text[] not null default '{}',
+  hobbies text[] not null default '{}',
+  status_badges text[] not null default '{}',
+  open_to_collab boolean not null default false,
+  job_seeking boolean not null default false,
+  manual_verification_notes text,
+  manual_proof_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.is_approved_member()
 returns boolean
 language sql
@@ -67,30 +91,6 @@ as $$
       and p.role = 'superadmin'
   );
 $$;
-
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  email text not null unique,
-  google_subject text not null unique,
-  role app_role not null default 'member',
-  approval_status approval_state not null default 'pending',
-  name text not null,
-  polytechnic text not null,
-  course text not null,
-  graduation_year integer not null,
-  linkedin_url text not null,
-  github_url text,
-  portfolio_url text,
-  skills text[] not null default '{}',
-  hobbies text[] not null default '{}',
-  status_badges text[] not null default '{}',
-  open_to_collab boolean not null default false,
-  job_seeking boolean not null default false,
-  manual_verification_notes text,
-  manual_proof_url text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
 
 create table if not exists public.approval_requests (
   id uuid primary key default gen_random_uuid(),
