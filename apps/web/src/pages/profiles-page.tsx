@@ -6,9 +6,7 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Filter,
-  Github,
   Globe,
-  Linkedin,
   Search,
   UsersRound,
   X,
@@ -57,13 +55,15 @@ function ProfileOverlay({
     {
       label: 'LinkedIn',
       href: profile.linkedinUrl,
-      icon: Linkedin,
+      iconSrc: '/LinkedIn.png',
+      iconAlt: 'LinkedIn',
     },
     profile.githubUrl
       ? {
           label: 'GitHub',
           href: profile.githubUrl,
-          icon: Github,
+          iconSrc: '/GitHub.svg',
+          iconAlt: 'GitHub',
         }
       : null,
     profile.portfolioUrl
@@ -71,9 +71,16 @@ function ProfileOverlay({
           label: 'Portfolio',
           href: profile.portfolioUrl,
           icon: Globe,
+          iconAlt: 'Portfolio',
         }
       : null,
-  ].filter(Boolean) as Array<{ label: string; href: string; icon: typeof Linkedin }>
+  ].filter(Boolean) as Array<{
+    label: string
+    href: string
+    iconAlt: string
+    icon?: typeof Globe
+    iconSrc?: string
+  }>
 
   const statuses = [
     profile.statusBadge,
@@ -153,11 +160,14 @@ function ProfileOverlay({
               <p className="section-kicker">Socials</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {socialLinks.map((item) => {
-                  const Icon = item.icon
                   return (
                     <Button key={item.label} asChild variant="outline" size="sm">
                       <a href={item.href} target="_blank" rel="noreferrer">
-                        <Icon className="h-4 w-4" />
+                        {item.iconSrc ? (
+                          <img src={item.iconSrc} alt={item.iconAlt} className="h-4 w-4" />
+                        ) : item.icon ? (
+                          <item.icon className="h-4 w-4" />
+                        ) : null}
                         {item.label}
                       </a>
                     </Button>
@@ -580,7 +590,7 @@ export function ProfilesPage() {
                           className="px-0 text-sm text-foreground hover:bg-transparent"
                         >
                           <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
-                            <Linkedin className="h-4 w-4" />
+                            <img src="/LinkedIn.png" alt="LinkedIn" className="h-4 w-4" />
                             LinkedIn
                           </a>
                         </Button>
