@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SiteFooter } from '@/components/layout/site-footer'
 import { useTheme } from '@/app/theme'
 import { cn } from '@/lib/utils'
 
@@ -238,6 +239,8 @@ export function AppShell() {
         <main className="mx-auto w-full max-w-[1380px] flex-1 px-0 pt-8">
           <Outlet />
         </main>
+
+        <SiteFooter />
       </div>
     </div>
   )
@@ -281,6 +284,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <div className="flex-1 pt-8">{children}</div>
+        <SiteFooter />
       </div>
     </div>
   )

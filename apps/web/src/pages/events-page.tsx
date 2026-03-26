@@ -4,6 +4,7 @@ import { CalendarDays, Filter, MapPin, Users, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/layout/empty-state'
+import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
 import { mockApi } from '@/lib/mock-api'
@@ -117,6 +118,7 @@ export function EventsPage() {
         description="Keep the calendar useful: filter by type, scan the essentials, and commit without extra clutter."
         actions={
           <>
+            <HeaderSocialLinks />
             <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
               {filteredEvents.length} visible
             </Badge>

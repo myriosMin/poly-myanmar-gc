@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { EmptyState } from '@/components/layout/empty-state'
+import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
 import { mockApi } from '@/lib/mock-api'
 import { studentStatuses, type ProfileFilters } from '@/lib/domain'
@@ -483,6 +484,7 @@ export function ProfilesPage() {
         description="Start from name, school, course, job-seeking status, and LinkedIn. Open a profile only when you want more context."
         actions={
           <>
+            <HeaderSocialLinks />
             <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
               <UsersRound className="mr-1 h-3.5 w-3.5" />
               {profilesQuery.data?.total ?? 0} members

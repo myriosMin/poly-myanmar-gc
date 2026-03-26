@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyState } from '@/components/layout/empty-state'
+import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { FullscreenModal, MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
 import type { CollabCreateInput } from '@/lib/domain'
@@ -230,6 +231,7 @@ export function CollabPage() {
         description="Filter the board by type, scan the essentials, and post a new collaboration only when you have clear context."
         actions={
           <>
+            <HeaderSocialLinks />
             <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
               {filteredProjects.length} visible
             </Badge>
