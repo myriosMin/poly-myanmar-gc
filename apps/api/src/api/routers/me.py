@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from ..deps import get_actor, get_store
 from ..models import MeResponse, ProfileRecord
-from ..store import InMemoryStore
+from ..store_protocol import StoreProtocol
 
 router = APIRouter(tags=["me"])
 
@@ -12,7 +12,7 @@ router = APIRouter(tags=["me"])
 @router.get("/me", response_model=MeResponse)
 def read_me(
     actor: ProfileRecord = Depends(get_actor),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> MeResponse:
     pending_review_count = 0
     queue_access = actor.is_admin

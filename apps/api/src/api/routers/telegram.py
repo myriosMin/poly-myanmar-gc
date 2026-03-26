@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from ..deps import get_actor, get_store, require_reviewer
 from ..models import ProfileRecord, TelegramWebhookRequest, TelegramWebhookResponse
-from ..store import InMemoryStore
+from ..store_protocol import StoreProtocol
 
 router = APIRouter(prefix="/telegram", tags=["telegram"])
 
@@ -13,6 +13,6 @@ router = APIRouter(prefix="/telegram", tags=["telegram"])
 def telegram_webhook(
     payload: TelegramWebhookRequest,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> TelegramWebhookResponse:
     return store.apply_telegram_webhook(actor, payload)
