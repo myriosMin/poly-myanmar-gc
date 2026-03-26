@@ -179,10 +179,6 @@ export function AppShell() {
             : 'profiles'
 
   useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [location.pathname])
-
-  useEffect(() => {
     document.documentElement.dataset.pageTheme = pageTheme
   }, [pageTheme])
 

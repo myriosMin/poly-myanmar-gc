@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { useTheme } from '@/app/theme'
 import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
@@ -51,18 +52,20 @@ function ProfileOverlay({
   profile: Awaited<ReturnType<typeof mockApi.getProfiles>>['items'][number]
   onClose: () => void
 }) {
+  const { theme } = useTheme()
+
   const socialLinks = [
     {
       label: 'LinkedIn',
       href: profile.linkedinUrl,
-      iconSrc: '/LinkedIn.png',
+      iconSrc: theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png',
       iconAlt: 'LinkedIn',
     },
     profile.githubUrl
       ? {
           label: 'GitHub',
           href: profile.githubUrl,
-          iconSrc: '/GitHub.svg',
+          iconSrc: theme === 'dark' ? '/GitHub_dark.svg' : '/GitHub.svg',
           iconAlt: 'GitHub',
         }
       : null,
@@ -285,6 +288,7 @@ function ProfileOverlay({
 }
 
 export function ProfilesPage() {
+  const { theme } = useTheme()
   const [filters, setFilters] = useState<ProfileFilters>(defaultFilters)
   const [searchDraft, setSearchDraft] = useState('')
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
@@ -590,7 +594,11 @@ export function ProfilesPage() {
                           className="px-0 text-sm text-foreground hover:bg-transparent"
                         >
                           <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
-                            <img src="/LinkedIn.png" alt="LinkedIn" className="h-4 w-4" />
+                            <img
+                              src={theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png'}
+                              alt="LinkedIn"
+                              className="h-4 w-4"
+                            />
                             LinkedIn
                           </a>
                         </Button>
