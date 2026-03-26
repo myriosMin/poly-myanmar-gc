@@ -97,7 +97,7 @@ function DesktopNav() {
               className={cn(
                 'relative z-10 inline-flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition duration-200',
                 isActive
-                  ? 'text-primary-foreground'
+                  ? 'text-white! [&_*]:text-white!'
                   : 'text-foreground/72 hover:bg-muted/80 hover:text-foreground',
               )}
             >
@@ -136,7 +136,7 @@ function MobileMenu({
                 cn(
                   'inline-flex items-center justify-between rounded-[1.2rem] border border-border/60 bg-background/70 px-4 py-3 text-sm font-medium transition duration-200',
                   isActive
-                    ? 'border-primary/20 bg-primary text-primary-foreground'
+                    ? 'border-primary/20 bg-primary text-white! [&_*]:text-white!'
                     : 'text-foreground/80 hover:bg-muted/80 hover:text-foreground',
                 )
               }
