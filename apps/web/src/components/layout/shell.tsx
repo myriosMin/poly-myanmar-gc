@@ -178,9 +178,6 @@ export function AppShell() {
             ? 'settings'
             : 'profiles'
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: close menu on navigation
-  useEffect(() => setMobileMenuOpen(false), [location.pathname])
-
   useEffect(() => {
     document.documentElement.dataset.pageTheme = pageTheme
   }, [pageTheme])

@@ -134,15 +134,19 @@ export function CollabPage() {
     },
   })
 
-  const filteredProjects = useMemo(() => {
-    const items = collabQuery.data?.items ?? []
+  const collabItems = collabQuery.data?.items
 
-    if (!typeFilter) {
-      return items
+  const filteredProjects = useMemo(() => {
+    if (!collabItems) {
+      return []
     }
 
-    return items.filter((project) => project.type === typeFilter)
-  }, [collabQuery.data?.items, typeFilter])
+    if (!typeFilter) {
+      return collabItems
+    }
+
+    return collabItems.filter((project) => project.type === typeFilter)
+  }, [collabItems, typeFilter])
 
   const sidebar = (
     <div className="filter-panel sticky-rail">

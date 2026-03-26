@@ -6,9 +6,7 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Filter,
-  Github,
   Globe,
-  Linkedin,
   Search,
   UsersRound,
   X,
@@ -17,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { useTheme } from '@/app/theme'
 import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
@@ -53,17 +52,21 @@ function ProfileOverlay({
   profile: Awaited<ReturnType<typeof mockApi.getProfiles>>['items'][number]
   onClose: () => void
 }) {
+  const { theme } = useTheme()
+
   const socialLinks = [
     {
       label: 'LinkedIn',
       href: profile.linkedinUrl,
-      icon: Linkedin,
+      iconSrc: theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png',
+      iconAlt: 'LinkedIn',
     },
     profile.githubUrl
       ? {
           label: 'GitHub',
           href: profile.githubUrl,
-          icon: Github,
+          iconSrc: theme === 'dark' ? '/GitHub_dark.svg' : '/GitHub.svg',
+          iconAlt: 'GitHub',
         }
       : null,
     profile.portfolioUrl
@@ -71,9 +74,16 @@ function ProfileOverlay({
           label: 'Portfolio',
           href: profile.portfolioUrl,
           icon: Globe,
+          iconAlt: 'Portfolio',
         }
       : null,
-  ].filter(Boolean) as Array<{ label: string; href: string; icon: typeof Linkedin }>
+  ].filter(Boolean) as Array<{
+    label: string
+    href: string
+    iconAlt: string
+    icon?: typeof Globe
+    iconSrc?: string
+  }>
 
   const statuses = [
     profile.statusBadge,
@@ -153,11 +163,14 @@ function ProfileOverlay({
               <p className="section-kicker">Socials</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {socialLinks.map((item) => {
-                  const Icon = item.icon
                   return (
                     <Button key={item.label} asChild variant="outline" size="sm">
                       <a href={item.href} target="_blank" rel="noreferrer">
-                        <Icon className="h-4 w-4" />
+                        {item.iconSrc ? (
+                          <img src={item.iconSrc} alt={item.iconAlt} className="h-4 w-4" />
+                        ) : item.icon ? (
+                          <item.icon className="h-4 w-4" />
+                        ) : null}
                         {item.label}
                       </a>
                     </Button>
@@ -275,6 +288,7 @@ function ProfileOverlay({
 }
 
 export function ProfilesPage() {
+  const { theme } = useTheme()
   const [filters, setFilters] = useState<ProfileFilters>(defaultFilters)
   const [searchDraft, setSearchDraft] = useState('')
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
@@ -580,7 +594,11 @@ export function ProfilesPage() {
                           className="px-0 text-sm text-foreground hover:bg-transparent"
                         >
                           <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
-                            <Linkedin className="h-4 w-4" />
+                            <img
+                              src={theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png'}
+                              alt="LinkedIn"
+                              className="h-4 w-4"
+                            />
                             LinkedIn
                           </a>
                         </Button>

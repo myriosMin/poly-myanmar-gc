@@ -27,15 +27,19 @@ export function EventsPage() {
     },
   })
 
-  const filteredEvents = useMemo(() => {
-    const items = eventsQuery.data?.items ?? []
+  const eventItems = eventsQuery.data?.items
 
-    if (!kindFilter) {
-      return items
+  const filteredEvents = useMemo(() => {
+    if (!eventItems) {
+      return []
     }
 
-    return items.filter((event) => event.kind === kindFilter)
-  }, [eventsQuery.data?.items, kindFilter])
+    if (!kindFilter) {
+      return eventItems
+    }
+
+    return eventItems.filter((event) => event.kind === kindFilter)
+  }, [eventItems, kindFilter])
 
   const sidebar = (
     <div className="filter-panel sticky-rail">

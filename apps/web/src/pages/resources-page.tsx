@@ -120,17 +120,21 @@ export function ResourcesPage() {
     },
   })
 
-  const filteredResources = useMemo(() => {
-    const items = resourcesQuery.data?.items ?? []
+  const resourceItems = resourcesQuery.data?.items
 
-    if (!categoryFilter) {
-      return items
+  const filteredResources = useMemo(() => {
+    if (!resourceItems) {
+      return []
     }
 
-    return items.filter((resource) =>
+    if (!categoryFilter) {
+      return resourceItems
+    }
+
+    return resourceItems.filter((resource) =>
       resource.categories.includes(categoryFilter),
     )
-  }, [categoryFilter, resourcesQuery.data?.items])
+  }, [categoryFilter, resourceItems])
 
   const sidebar = (
     <div className="filter-panel sticky-rail">
