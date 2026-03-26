@@ -70,6 +70,7 @@ export function SettingsPage() {
     },
   })
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const publicFields = form.watch('publicFields')
 
   return (

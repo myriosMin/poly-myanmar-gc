@@ -134,15 +134,13 @@ export function CollabPage() {
   })
 
   const filteredProjects = useMemo(() => {
-    if (!collabQuery.data?.items) {
-      return []
-    }
+    const items = collabQuery.data?.items ?? []
 
     if (!typeFilter) {
-      return collabQuery.data.items
+      return items
     }
 
-    return collabQuery.data.items.filter((project) => project.type === typeFilter)
+    return items.filter((project) => project.type === typeFilter)
   }, [collabQuery.data?.items, typeFilter])
 
   const sidebar = (

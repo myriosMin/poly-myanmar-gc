@@ -27,15 +27,13 @@ export function EventsPage() {
   })
 
   const filteredEvents = useMemo(() => {
-    if (!eventsQuery.data?.items) {
-      return []
-    }
+    const items = eventsQuery.data?.items ?? []
 
     if (!kindFilter) {
-      return eventsQuery.data.items
+      return items
     }
 
-    return eventsQuery.data.items.filter((event) => event.kind === kindFilter)
+    return items.filter((event) => event.kind === kindFilter)
   }, [eventsQuery.data?.items, kindFilter])
 
   const sidebar = (
