@@ -202,6 +202,7 @@ class EventRecord(BaseModel):
     published_at: datetime = Field(default_factory=datetime.utcnow)
     attendees_visible: bool = True
     attendance_count: int = 0
+    capacity: int | None = None
 
 
 class EventDraftRecord(BaseModel):
@@ -221,6 +222,7 @@ class EventDraftRecord(BaseModel):
     reviewed_at: datetime | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    capacity: int | None = None
 
 
 class RsvpRequest(BaseModel):

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 
 from ..deps import get_actor, get_store, require_approved_member
 from ..models import EventRecord, Page, ProfileRecord, RsvpRecord, RsvpRequest
-from ..store import InMemoryStore
+from ..store_protocol import StoreProtocol
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 @router.get("", response_model=Page[EventRecord])
 def list_events(
     _: ProfileRecord = Depends(require_approved_member),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> Page[EventRecord]:
@@ -26,6 +26,6 @@ def rsvp_event(
     event_id: UUID,
     payload: RsvpRequest,
     actor: ProfileRecord = Depends(require_approved_member),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> RsvpRecord:
     return store.rsvp_event(actor, event_id, payload.status)

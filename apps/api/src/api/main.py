@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.state.store = create_store()
+    app.state.store = create_store(settings.store_backend)
     app.include_router(health_router)
     app.include_router(me_router)
     app.include_router(profiles_router)

@@ -17,7 +17,7 @@ from ..models import (
     ResourceSubmissionRecord,
     QueueCounts,
 )
-from ..store import InMemoryStore
+from ..store_protocol import StoreProtocol
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 @router.get("/queue", response_model=QueueCounts)
 def queue_counts(
     _: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> QueueCounts:
     return store.queue_counts()
 
@@ -33,7 +33,7 @@ def queue_counts(
 @router.get("/approvals", response_model=Page[ApprovalRequestRecord])
 def list_approvals(
     _: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> Page[ApprovalRequestRecord]:
@@ -44,7 +44,7 @@ def list_approvals(
 def approve_approval(
     request_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ApprovalRequestRecord:
     return store.review_user_application(actor, request_id, action=ModerationAction.approve)
 
@@ -53,7 +53,7 @@ def approve_approval(
 def reject_approval(
     request_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ApprovalRequestRecord:
     return store.review_user_application(actor, request_id, action=ModerationAction.reject)
 
@@ -61,7 +61,7 @@ def reject_approval(
 @router.get("/resources/submissions", response_model=Page[ResourceSubmissionRecord])
 def list_submissions(
     _: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> Page[ResourceSubmissionRecord]:
@@ -72,7 +72,7 @@ def list_submissions(
 def approve_submission(
     submission_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ResourceSubmissionRecord:
     return store.publish_resource(actor, submission_id, approved=True)
 
@@ -81,7 +81,7 @@ def approve_submission(
 def reject_submission(
     submission_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ResourceSubmissionRecord:
     return store.publish_resource(actor, submission_id, approved=False)
 
@@ -89,7 +89,7 @@ def reject_submission(
 @router.get("/event-drafts", response_model=Page[EventDraftRecord])
 def list_event_drafts(
     _: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> Page[EventDraftRecord]:
@@ -100,7 +100,7 @@ def list_event_drafts(
 def publish_event_draft(
     draft_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> EventDraftRecord:
     return store.publish_event_draft(actor, draft_id, approved=True)
 
@@ -109,7 +109,7 @@ def publish_event_draft(
 def reject_event_draft(
     draft_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> EventDraftRecord:
     return store.publish_event_draft(actor, draft_id, approved=False)
 
@@ -117,7 +117,7 @@ def reject_event_draft(
 @router.get("/flags", response_model=Page[FlagRecord])
 def list_flags(
     _: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> Page[FlagRecord]:
@@ -128,7 +128,7 @@ def list_flags(
 def ban_user(
     user_id: UUID,
     actor: ProfileRecord = Depends(require_superadmin),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> dict[str, str]:
     profile = store.ban_user(actor, user_id)
     return {"status": profile.approval_status.value, "user_id": str(user_id)}
@@ -138,7 +138,7 @@ def ban_user(
 def unban_user(
     user_id: UUID,
     actor: ProfileRecord = Depends(require_superadmin),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> dict[str, str]:
     profile = store.unban_user(actor, user_id)
     return {"status": profile.approval_status.value, "user_id": str(user_id)}
@@ -148,7 +148,7 @@ def unban_user(
 def remove_collab(
     collab_id: UUID,
     actor: ProfileRecord = Depends(require_reviewer),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> dict[str, str]:
     store.delete_collab(actor, collab_id)
     return {"status": "removed", "collab_id": str(collab_id)}

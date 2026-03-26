@@ -847,5 +847,7 @@ class InMemoryStore:
         )
 
 
-def create_store() -> InMemoryStore:
-    return InMemoryStore()
+def create_store(backend: str = "memory") -> InMemoryStore:
+    if backend == "memory":
+        return InMemoryStore()
+    raise ValueError(f"Unknown store backend: {backend}")
