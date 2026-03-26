@@ -72,6 +72,8 @@ const profiles: DirectoryProfile[] = [
     polytechnic: 'NP',
     course: 'Diploma in Business Informatics',
     graduationYear: 2026,
+    joinedAt: '2025-08-18T09:00:00+08:00',
+    bio: 'Product design student who likes thoughtful interfaces, warm community events, and small teams that actually ship.',
     skills: ['Product Design', 'Figma', 'Research'],
     hobbies: ['reading', 'matcha', 'journaling'],
     portfolioUrl: 'https://nilar.dev',
@@ -83,6 +85,28 @@ const profiles: DirectoryProfile[] = [
     jobSeeking: true,
     badges: ['current student', 'looking for job'],
     githubUrl: 'https://github.com/nilarhtet',
+    eventHistory: [
+      {
+        id: 'event-1',
+        title: 'Singapore Career Fair Warm-Up',
+        status: 'going',
+        date: '2026-04-02T10:00:00+08:00',
+      },
+      {
+        id: 'event-3',
+        title: 'Grad Resume Clinic',
+        status: 'interested',
+        date: '2026-04-14T19:00:00+08:00',
+      },
+    ],
+    collabHistory: [
+      {
+        id: 'collab-1',
+        title: 'Campus Career Compass',
+        status: 'interested',
+        deadline: '2026-04-20',
+      },
+    ],
   },
   {
     id: 'profile-2',
@@ -91,6 +115,8 @@ const profiles: DirectoryProfile[] = [
     polytechnic: 'SP',
     course: 'Diploma in Information Technology',
     graduationYear: 2024,
+    joinedAt: '2024-11-06T09:00:00+08:00',
+    bio: 'Frontend-focused graduate who enjoys building practical community tools and helping members make clearer first moves.',
     skills: ['React', 'FastAPI', 'Supabase'],
     hobbies: ['open source', 'badminton'],
     portfolioUrl: 'https://aungmin.dev',
@@ -102,6 +128,22 @@ const profiles: DirectoryProfile[] = [
     jobSeeking: false,
     badges: ['employed', 'mentor'],
     githubUrl: 'https://github.com/aungmin',
+    eventHistory: [
+      {
+        id: 'event-1',
+        title: 'Singapore Career Fair Warm-Up',
+        status: 'going',
+        date: '2026-04-02T10:00:00+08:00',
+      },
+    ],
+    collabHistory: [
+      {
+        id: 'collab-1',
+        title: 'Campus Career Compass',
+        status: 'member',
+        deadline: '2026-04-20',
+      },
+    ],
   },
   {
     id: 'profile-3',
@@ -110,6 +152,8 @@ const profiles: DirectoryProfile[] = [
     polytechnic: 'TP',
     course: 'Diploma in Cybersecurity',
     graduationYear: 2025,
+    joinedAt: '2025-01-22T09:00:00+08:00',
+    bio: 'Cybersecurity student balancing cloud labs, community meetups, and a steady search for stronger graduate opportunities.',
     skills: ['Security', 'Cloud', 'Python'],
     hobbies: ['cafe hopping', 'capture the flag'],
     linkedinUrl: 'https://linkedin.com/in/thirizin',
@@ -119,6 +163,22 @@ const profiles: DirectoryProfile[] = [
     attendingEvents: true,
     jobSeeking: true,
     badges: ['graduate', 'looking for job'],
+    eventHistory: [
+      {
+        id: 'event-2',
+        title: 'Poly Myanmar Hack Night',
+        status: 'going',
+        date: '2026-04-09T18:30:00+08:00',
+      },
+    ],
+    collabHistory: [
+      {
+        id: 'collab-2',
+        title: 'Poly Myanmar Open Source Sprint',
+        status: 'member',
+        deadline: '2026-04-11',
+      },
+    ],
   },
   {
     id: 'profile-4',
@@ -127,6 +187,8 @@ const profiles: DirectoryProfile[] = [
     polytechnic: 'NYP',
     course: 'Diploma in Data Science',
     graduationYear: 2023,
+    joinedAt: '2024-06-03T09:00:00+08:00',
+    bio: 'Data-minded mentor who prefers calm working sessions, crisp dashboards, and collaboration briefs with real scope.',
     skills: ['SQL', 'Analytics', 'Data Viz'],
     hobbies: ['coffee', 'volleyball'],
     portfolioUrl: 'https://zeyar.io',
@@ -138,6 +200,22 @@ const profiles: DirectoryProfile[] = [
     jobSeeking: false,
     badges: ['mentor', 'employed'],
     githubUrl: 'https://github.com/kozeyar',
+    eventHistory: [
+      {
+        id: 'event-3',
+        title: 'Grad Resume Clinic',
+        status: 'going',
+        date: '2026-04-14T19:00:00+08:00',
+      },
+    ],
+    collabHistory: [
+      {
+        id: 'collab-2',
+        title: 'Poly Myanmar Open Source Sprint',
+        status: 'interested',
+        deadline: '2026-04-11',
+      },
+    ],
   },
 ]
 

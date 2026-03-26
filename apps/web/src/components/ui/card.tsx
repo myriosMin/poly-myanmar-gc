@@ -2,22 +2,14 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn(
-        'surface-panel rounded-[2rem] text-card-foreground',
-        className,
-      )}
-      {...props}
-    />
-  )
+  return <div className={cn('surface-panel text-card-foreground', className)} {...props} />
 }
 
 function CardHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-6 pb-0', className)} {...props} />
+  return <div className={cn('panel-padding pb-0', className)} {...props} />
 }
 
 function CardTitle({
@@ -26,7 +18,7 @@ function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn('font-display text-xl font-semibold tracking-tight', className)}
+      className={cn('font-display text-2xl font-semibold tracking-tight', className)}
       {...props}
     />
   )
@@ -43,7 +35,7 @@ function CardContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-6', className)} {...props} />
+  return <div className={cn('panel-padding', className)} {...props} />
 }
 
 function CardFooter({
@@ -51,7 +43,7 @@ function CardFooter({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex items-center p-6 pt-0', className)} {...props} />
+    <div className={cn('flex items-center panel-padding pt-0', className)} {...props} />
   )
 }
 

@@ -6,26 +6,40 @@
 
 :root {
   color-scheme: light;
-  --background: 32 34% 95%;
-  --foreground: 24 21% 19%;
-  --card: 36 36% 97%;
-  --card-foreground: 24 21% 19%;
-  --popover: 36 36% 97%;
-  --popover-foreground: 24 21% 19%;
-  --primary: 22 29% 28%;
-  --primary-foreground: 34 40% 96%;
-  --secondary: 35 33% 88%;
-  --secondary-foreground: 23 20% 22%;
-  --muted: 35 22% 90%;
-  --muted-foreground: 23 11% 40%;
-  --accent: 156 18% 39%;
+  --radius-shell: 2rem;
+  --radius-panel: 1.75rem;
+  --radius-subpanel: 1.35rem;
+  --radius-control: 1rem;
+  --radius-pill: 999px;
+  --control-height: 2.875rem;
+  --control-height-sm: 2.25rem;
+  --panel-padding: 1.5rem;
+  --panel-padding-lg: 2rem;
+  --page-gap: 2rem;
+  --sticky-offset: 9rem;
+  --background: 38 44% 97%;
+  --foreground: 24 22% 20%;
+  --card: 44 50% 99%;
+  --card-foreground: 24 22% 20%;
+  --popover: 44 50% 99%;
+  --popover-foreground: 24 22% 20%;
+  --primary: 21 33% 32%;
+  --primary-foreground: 38 45% 98%;
+  --secondary: 34 40% 92%;
+  --secondary-foreground: 23 21% 24%;
+  --muted: 34 30% 93%;
+  --muted-foreground: 23 12% 42%;
+  --accent: 157 24% 38%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 72% 56%;
   --destructive-foreground: 0 0% 100%;
-  --border: 28 22% 80%;
-  --input: 28 22% 80%;
-  --ring: 22 29% 28%;
+  --border: 30 29% 84%;
+  --input: 30 29% 84%;
+  --ring: 21 33% 32%;
   --shadow-color: 22 24% 22%;
+  --selection-rgb: 172 122 81;
+  --shell-glow-left-rgb: 206 148 102;
+  --shell-glow-right-rgb: 116 148 128;
 }
 
 .dark {
@@ -50,6 +64,105 @@
   --input: 220 10% 25%;
   --ring: 31 31% 74%;
   --shadow-color: 220 35% 4%;
+  --selection-rgb: 196 148 106;
+  --shell-glow-left-rgb: 176 126 84;
+  --shell-glow-right-rgb: 110 140 127;
+}
+
+:root[data-page-theme='profiles'] {
+  --primary: 21 33% 32%;
+  --ring: 21 33% 32%;
+  --accent: 157 24% 38%;
+  --shell-glow-left-rgb: 206 148 102;
+  --shell-glow-right-rgb: 116 148 128;
+}
+
+:root[data-page-theme='events'] {
+  --primary: 204 35% 34%;
+  --ring: 204 35% 34%;
+  --accent: 178 23% 38%;
+  --shell-glow-left-rgb: 129 168 197;
+  --shell-glow-right-rgb: 113 157 150;
+}
+
+:root[data-page-theme='resources'] {
+  --primary: 158 30% 31%;
+  --ring: 158 30% 31%;
+  --accent: 38 30% 40%;
+  --shell-glow-left-rgb: 132 169 143;
+  --shell-glow-right-rgb: 188 156 112;
+}
+
+:root[data-page-theme='collab'] {
+  --primary: 270 24% 38%;
+  --ring: 270 24% 38%;
+  --accent: 224 28% 43%;
+  --shell-glow-left-rgb: 152 137 204;
+  --shell-glow-right-rgb: 114 146 194;
+}
+
+:root[data-page-theme='settings'] {
+  --primary: 194 28% 34%;
+  --ring: 194 28% 34%;
+  --accent: 164 22% 34%;
+  --shell-glow-left-rgb: 111 161 176;
+  --shell-glow-right-rgb: 124 165 141;
+}
+
+:root[data-page-theme='public'] {
+  --primary: 23 34% 33%;
+  --ring: 23 34% 33%;
+  --accent: 157 24% 38%;
+  --shell-glow-left-rgb: 206 148 102;
+  --shell-glow-right-rgb: 116 148 128;
+}
+
+:root.dark[data-page-theme='profiles'] {
+  --primary: 31 31% 74%;
+  --ring: 31 31% 74%;
+  --accent: 157 18% 54%;
+  --shell-glow-left-rgb: 176 126 84;
+  --shell-glow-right-rgb: 110 140 127;
+}
+
+:root.dark[data-page-theme='events'] {
+  --primary: 205 36% 72%;
+  --ring: 205 36% 72%;
+  --accent: 186 23% 60%;
+  --shell-glow-left-rgb: 92 132 166;
+  --shell-glow-right-rgb: 82 124 139;
+}
+
+:root.dark[data-page-theme='resources'] {
+  --primary: 155 28% 69%;
+  --ring: 155 28% 69%;
+  --accent: 38 30% 64%;
+  --shell-glow-left-rgb: 90 131 102;
+  --shell-glow-right-rgb: 146 130 88;
+}
+
+:root.dark[data-page-theme='collab'] {
+  --primary: 268 30% 74%;
+  --ring: 268 30% 74%;
+  --accent: 223 32% 66%;
+  --shell-glow-left-rgb: 116 104 167;
+  --shell-glow-right-rgb: 81 113 157;
+}
+
+:root.dark[data-page-theme='settings'] {
+  --primary: 195 31% 72%;
+  --ring: 195 31% 72%;
+  --accent: 166 24% 60%;
+  --shell-glow-left-rgb: 84 126 139;
+  --shell-glow-right-rgb: 89 133 111;
+}
+
+:root.dark[data-page-theme='public'] {
+  --primary: 31 31% 74%;
+  --ring: 31 31% 74%;
+  --accent: 157 18% 54%;
+  --shell-glow-left-rgb: 176 126 84;
+  --shell-glow-right-rgb: 110 140 127;
 }
 
 html,
@@ -66,8 +179,8 @@ body {
   margin: 0;
   font-family: theme(fontFamily.body);
   background:
-    radial-gradient(circle at top left, rgba(196, 145, 97, 0.2), transparent 28%),
-    radial-gradient(circle at top right, rgba(113, 140, 124, 0.16), transparent 24%),
+    radial-gradient(circle at top left, rgb(var(--shell-glow-left-rgb) / 0.2), transparent 28%),
+    radial-gradient(circle at top right, rgb(var(--shell-glow-right-rgb) / 0.16), transparent 24%),
     linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
   color: hsl(var(--foreground));
   text-rendering: optimizeLegibility;
@@ -78,8 +191,8 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at top left, rgba(176, 126, 84, 0.16), transparent 26%),
-    radial-gradient(circle at top right, rgba(110, 140, 127, 0.12), transparent 22%),
+    radial-gradient(circle at top left, rgb(var(--shell-glow-left-rgb) / 0.16), transparent 26%),
+    radial-gradient(circle at top right, rgb(var(--shell-glow-right-rgb) / 0.12), transparent 22%),
     linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
 }
 
@@ -99,7 +212,7 @@ a {
 }
 
 ::selection {
-  background: rgba(164, 112, 66, 0.24);
+  background: rgb(var(--selection-rgb) / 0.24);
 }
 
 @layer base {
@@ -108,6 +221,7 @@ a {
   h3,
   h4 {
     letter-spacing: -0.04em;
+    line-height: 1.02;
   }
 
   p {
@@ -120,16 +234,106 @@ a {
     @apply border border-border/60 backdrop-blur-2xl;
     background-color: hsla(var(--card), 0.72);
     box-shadow: 0 28px 80px -46px hsla(var(--shadow-color), 0.44);
+    border-radius: var(--radius-shell);
   }
 
   .surface-panel {
     @apply border border-border/70 text-card-foreground;
     background-color: hsla(var(--card), 0.96);
     box-shadow: 0 36px 90px -54px hsla(var(--shadow-color), 0.46);
+    border-radius: var(--radius-shell);
+  }
+
+  .surface-inset {
+    @apply border border-border/60;
+    background-color: hsla(var(--background), 0.78);
+    border-radius: var(--radius-subpanel);
+    box-shadow: inset 0 1px 0 hsla(var(--border), 0.18);
   }
 
   .section-kicker {
     @apply text-[0.7rem] font-semibold uppercase tracking-[0.26em] text-muted-foreground;
+  }
+
+  .page-stack {
+    gap: var(--page-gap);
+  }
+
+  .page-title {
+    @apply font-display font-semibold text-foreground;
+    font-size: clamp(2.5rem, 3vw, 3.5rem);
+  }
+
+  .section-title {
+    @apply font-display font-semibold text-foreground;
+    font-size: clamp(1.75rem, 2vw, 2.25rem);
+  }
+
+  .body-copy {
+    @apply text-sm text-muted-foreground md:text-base;
+  }
+
+  .micro-copy {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .panel-padding {
+    padding: var(--panel-padding);
+  }
+
+  .panel-padding-lg {
+    padding: var(--panel-padding-lg);
+  }
+
+  .content-row {
+    @apply surface-panel card-float;
+    border-radius: var(--radius-shell);
+    padding: 1.75rem;
+  }
+
+  .meta-block {
+    @apply surface-inset text-sm;
+    padding: 1rem;
+  }
+
+  .filter-panel {
+    @apply surface-panel h-fit;
+    border-radius: var(--radius-shell);
+    padding: 1.5rem;
+  }
+
+  .sticky-rail {
+    @apply h-fit lg:sticky;
+    top: var(--sticky-offset);
+  }
+
+  .filter-option {
+    @apply rounded-[1.4rem] border border-border/60 px-4 py-4 text-left transition duration-200 hover:bg-muted/70;
+    background-color: hsla(var(--background), 0.74);
+  }
+
+  .filter-option-active {
+    @apply border-primary/20 bg-primary text-primary-foreground;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 overflow-y-auto backdrop-blur-2xl;
+    background-color: hsla(var(--background), 0.88);
+  }
+
+  .modal-frame {
+    @apply relative mx-auto min-h-full px-4 pb-8 pt-0 md:px-6;
+    max-width: 80rem;
+  }
+
+  .modal-header {
+    @apply surface-blur flex items-center justify-between rounded-b-[2rem] rounded-t-none px-4 py-4 md:px-6;
+  }
+
+  .modal-body {
+    @apply surface-panel mx-auto mt-6;
+    max-width: 48rem;
+    padding: var(--panel-padding-lg);
   }
 
   .editorial-grid {
@@ -138,6 +342,21 @@ a {
       linear-gradient(to bottom, hsla(var(--border), 0.2) 1px, transparent 1px);
     background-size: 36px 36px;
     mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.58), transparent 85%);
+  }
+
+  .app-shell-background {
+    background:
+      radial-gradient(circle at top left, rgb(var(--shell-glow-left-rgb) / 0.18), transparent 30%),
+      radial-gradient(circle at top right, rgb(var(--shell-glow-right-rgb) / 0.18), transparent 24%),
+      linear-gradient(180deg, hsla(var(--card), 0.98), hsla(var(--background), 0.96));
+  }
+
+  .shell-glow-left {
+    background-color: rgb(var(--shell-glow-left-rgb) / 0.2);
+  }
+
+  .shell-glow-right {
+    background-color: rgb(var(--shell-glow-right-rgb) / 0.2);
   }
 
   .mandalay-arch {

@@ -1,0 +1,44 @@
+name: Infra / GitHub / deployment
+description: Track CI, Dependabot, secrets, deployment, or repository process work.
+title: "[Ops] "
+labels:
+  - infrastructure
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - github actions
+        - branch protection / rulesets
+        - dependabot
+        - vercel
+        - railway
+        - supabase
+        - local developer experience
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What needs to be improved or automated?
+    validations:
+      required: true
+
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk or motivation
+      description: Why does this matter now?
+    validations:
+      required: true
+
+  - type: textarea
+    id: completion
+    attributes:
+      label: Done when
+      description: List the observable completion criteria.
+    validations:
+      required: true

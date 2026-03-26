@@ -70,6 +70,7 @@ export function SettingsPage() {
     },
   })
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const publicFields = form.watch('publicFields')
 
   return (
@@ -78,16 +79,20 @@ export function SettingsPage() {
         eyebrow="Settings"
         title="Control what members see first, and what stays private."
         description="Your profile should feel intentional: enough detail to be discoverable, not so much that it becomes noisy."
-        actions={<Badge variant="outline">Member-only visibility</Badge>}
+        actions={
+          <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+            Member-only visibility
+          </Badge>
+        }
       />
 
       <section className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="surface-panel rounded-[2rem] p-8">
+        <div className="surface-panel p-8">
           <div className="flex items-center gap-2">
             <UserCog className="h-5 w-5 text-primary" />
-            <p className="font-display text-3xl font-semibold">Profile details</p>
+            <p className="section-title">Profile details</p>
           </div>
-          <p className="mt-3 max-w-md text-sm text-muted-foreground">
+          <p className="body-copy mt-3 max-w-md">
             These settings shape how you appear inside the directory and how easy you are to
             approach.
           </p>
@@ -142,12 +147,12 @@ export function SettingsPage() {
               />
             </div>
 
-            <div className="rounded-[1.7rem] bg-muted/62 p-5">
+            <div className="surface-inset p-5">
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4 text-primary" />
                 <p className="font-medium">Public profile fields</p>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="body-copy mt-2 !text-sm">
                 Choose what appears on your member profile. Keep at least one field visible.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -183,18 +188,18 @@ export function SettingsPage() {
         </div>
 
         <div className="grid gap-4">
-          <div className="surface-panel rounded-[2rem] bg-primary p-8 text-primary-foreground">
+          <div className="surface-panel bg-primary p-8 text-primary-foreground">
             <Eye className="h-5 w-5" />
-            <p className="mt-4 font-display text-3xl font-semibold">
+            <p className="section-title mt-4 text-primary-foreground">
               Visibility should feel deliberate.
             </p>
-            <p className="mt-3 text-sm text-primary-foreground/80">
+            <p className="body-copy mt-3 text-primary-foreground/80">
               Members should understand your school, direction, and availability quickly, without
               you exposing more than you want.
             </p>
           </div>
 
-          <div className="surface-panel rounded-[2rem] p-8">
+          <div className="surface-panel p-8">
             <p className="section-kicker">Current account</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge>{settingsQuery.data?.approvalState ?? 'loading'}</Badge>

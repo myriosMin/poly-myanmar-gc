@@ -19,3 +19,4 @@ apps/web/node_modules/
 apps/web/dist/
 apps/api/.venv/
 apps/worker/.venv/
+.temp/

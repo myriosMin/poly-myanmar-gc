@@ -19,16 +19,14 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        'page-reveal grid gap-5 border-b border-border/50 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end',
+        'page-reveal page-stack grid border-b border-border/50 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end',
         className,
       )}
     >
       <div className="max-w-3xl">
         <p className="section-kicker">{eyebrow}</p>
-        <h1 className="mt-4 max-w-2xl font-display text-4xl font-semibold text-foreground md:text-5xl">
-          {title}
-        </h1>
-        <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">{description}</p>
+        <h1 className="page-title mt-4 max-w-2xl">{title}</h1>
+        <p className="body-copy mt-3 max-w-xl">{description}</p>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2 lg:justify-end">{actions}</div> : null}
     </section>

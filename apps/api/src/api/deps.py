@@ -6,10 +6,10 @@ from fastapi import Depends, Header, HTTPException, Request, status
 
 from .models import ApprovalState, ProfileRecord, Role
 from .settings import get_settings
-from .store import InMemoryStore
+from .store_protocol import StoreProtocol
 
 
-def get_store(request: Request) -> InMemoryStore:
+def get_store(request: Request) -> StoreProtocol:
     store = getattr(request.app.state, "store", None)
     if store is None:
         raise RuntimeError("API store is not configured")
@@ -18,7 +18,7 @@ def get_store(request: Request) -> InMemoryStore:
 
 def get_actor(
     x_actor_id: UUID | None = Header(default=None, alias="X-Actor-Id"),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ProfileRecord:
     settings = get_settings()
     actor_id = x_actor_id or UUID(settings.default_actor_id)

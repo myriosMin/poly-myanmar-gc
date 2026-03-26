@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..deps import get_actor, get_store, require_approved_member
 from ..models import ApprovalState, Page, ProfileRecord, ProfileUpdateRequest
-from ..store import InMemoryStore
+from ..store_protocol import StoreProtocol
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 @router.get("", response_model=Page[ProfileRecord])
 def list_profiles(
     _: ProfileRecord = Depends(require_approved_member),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     search: str | None = Query(default=None),
@@ -44,7 +44,7 @@ def list_profiles(
 def get_profile(
     profile_id: UUID,
     _: ProfileRecord = Depends(require_approved_member),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ProfileRecord:
     profile = store.get_profile(profile_id)
     if profile is None or profile.approval_status != ApprovalState.approved:
@@ -56,6 +56,6 @@ def get_profile(
 def update_me(
     payload: ProfileUpdateRequest,
     actor: ProfileRecord = Depends(require_approved_member),
-    store: InMemoryStore = Depends(get_store),
+    store: StoreProtocol = Depends(get_store),
 ) -> ProfileRecord:
     return store.update_profile(actor, payload)
