@@ -45,6 +45,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate replace to="/auth" />} />
         <Route
           path="/auth"
           element={
@@ -53,6 +54,8 @@ export default function App() {
             </PublicShell>
           }
         />
+        <Route path="/privacy" element={<Navigate replace to="/legal/privacy" />} />
+        <Route path="/terms" element={<Navigate replace to="/legal/terms" />} />
         <Route
           path="/pending-approval"
           element={

@@ -33,6 +33,26 @@ const content = {
       'Keep resources and collaborations relevant to study, careers, hackathons, and open source work.',
     ],
   },
+  deletion: {
+    title: 'Account & Data Deletion',
+    eyebrow: 'Legal',
+    description: 'How members can request account and personal data deletion.',
+    sections: [
+      'You can request account removal, profile data deletion, and removal of optional links or collaboration listings through the admin support path.',
+      'We may retain minimal moderation and security audit records needed for abuse prevention and platform safety.',
+      'Requests should include your full name, Google sign-in email, and LinkedIn URL so admins can verify identity before action.',
+    ],
+  },
+  contracts: {
+    title: 'Shared Contracts',
+    eyebrow: 'Policy',
+    description: 'Platform constants and operational rules used across the product.',
+    sections: [
+      'Defines role, approval, moderation, and RSVP states used by the product and backend workflows.',
+      'Confirms core route and approval behavior for private member access and moderation consistency across admin channels.',
+      'Documents core product constraints, including no social feed, post comments, or in-app messaging in this release.',
+    ],
+  },
 } as const
 
 export function LegalPage() {
