@@ -550,7 +550,7 @@ export function ProfilesPage() {
                       setSelectedProfileId(profile.id)
                     }
                   }}
-                  className="text-left focus:outline-none"
+                  className="text-left focus:outline-hidden"
                 >
                   <div className="surface-panel card-float h-full rounded-[2rem] px-5 py-5 md:px-6 md:py-6">
                     <div className="flex h-full flex-col justify-between gap-6">

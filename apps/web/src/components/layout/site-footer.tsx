@@ -14,7 +14,6 @@ const legalLinks = [
   { to: '/legal/terms', label: 'Terms & Conditions' },
   { to: '/legal/guidelines', label: 'Guidelines' },
   { to: '/legal/deletion', label: 'Data Deletion' },
-  { to: '/legal/contracts', label: 'Contracts' },
 ]
 
 const mobileLinks = [

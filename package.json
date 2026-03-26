@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/myriosMin/poly-myanmar-gc/issues"
   },
-  "homepage": "https://github.com/myriosMin/poly-myanmar-gc#readme"
+  "homepage": "https://github.com/myriosMin/poly-myanmar-gc#readme",
+  "dependencies": {
+    "tailwindcss-mcp-server": "^0.1.1"
+  }
 }
