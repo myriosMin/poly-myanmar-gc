@@ -70,14 +70,16 @@ export function PendingApprovalPage() {
               ))}
             </div>
 
-            <Button
-              className="w-full md:w-auto"
-              variant="outline"
-              onClick={() => approveMutation.mutate()}
-              disabled={approveMutation.isPending}
-            >
-              {approveMutation.isPending ? 'Approving...' : 'Simulate reviewer approval'}
-            </Button>
+            {import.meta.env.DEV ? (
+              <Button
+                className="w-full md:w-auto"
+                variant="outline"
+                onClick={() => approveMutation.mutate()}
+                disabled={approveMutation.isPending}
+              >
+                {approveMutation.isPending ? 'Approving...' : 'Simulate reviewer approval'}
+              </Button>
+            ) : null}
           </div>
         </div>
 

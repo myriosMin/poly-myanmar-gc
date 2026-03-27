@@ -24,7 +24,11 @@ function RequireApproved({ children }: { children: ReactNode }) {
     return <LoadingScreen />
   }
 
-  if (!session || session.approvalState !== 'approved') {
+  if (!session) {
+    return <Navigate replace to="/auth" />
+  }
+
+  if (session.approvalState !== 'approved') {
     return <Navigate replace to="/pending-approval" />
   }
 

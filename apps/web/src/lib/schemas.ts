@@ -1,24 +1,15 @@
 import { z } from 'zod'
 import {
   collabTypes,
-  polytechnics,
   publicProfileFields,
   studentStatuses,
 } from '@/lib/domain'
 
 export const onboardingSchema = z.object({
   name: z.string().min(2, 'Enter your full name'),
-  polytechnic: z.enum(polytechnics),
-  course: z.string().min(2, 'Add your course'),
-  graduationYear: z.string().min(4, 'Add your graduation year'),
+  email: z.string().email('Use a valid email address'),
   linkedinUrl: z.url('Use a valid LinkedIn URL'),
-  githubUrl: z.string().url('Use a valid GitHub URL').optional().or(z.literal('')),
-  portfolioUrl: z.string().url('Use a valid portfolio URL').optional().or(z.literal('')),
-  skills: z.string().min(2, 'Add at least one skill'),
-  hobbies: z.string().min(2, 'Add at least one hobby'),
-  openToCollab: z.boolean().default(true),
-  jobSeeking: z.boolean().default(false),
-  statusBadge: z.enum(studentStatuses),
+  password: z.string().min(8, 'Use at least 8 characters'),
 })
 
 export const resourceSubmissionSchema = z.object({

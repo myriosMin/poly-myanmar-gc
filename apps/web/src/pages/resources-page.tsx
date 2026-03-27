@@ -12,9 +12,9 @@ import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { FullscreenModal, MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
+import { api } from '@/lib/api'
 import type { ResourceSubmissionInput } from '@/lib/domain'
 import { resourceCategories } from '@/lib/domain'
-import { mockApi } from '@/lib/mock-api'
 import { resourceSubmissionSchema, type ResourceSubmissionForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 
@@ -97,7 +97,7 @@ export function ResourcesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const resourcesQuery = useQuery({
     queryKey: ['resources'],
-    queryFn: () => mockApi.getResources(),
+    queryFn: () => api.getResources(),
   })
 
   const form = useForm<ResourceSubmissionForm>({
@@ -111,7 +111,7 @@ export function ResourcesPage() {
   })
 
   const submitMutation = useMutation({
-    mutationFn: mockApi.submitResource,
+    mutationFn: api.submitResource,
     onSuccess: async () => {
       setSelectedCategories([])
       form.reset()
