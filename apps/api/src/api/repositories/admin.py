@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import UTC, datetime
-from typing import Any, Callable, TypeVar
+from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID
 
-from postgrest import APIResponse, CountMethod
+from postgrest import CountMethod
 from supabase import Client
 
 from ..models import (
-    AdminActionRecord,
     ApprovalRequestRecord,
     ApprovalState,
     FlagRecord,
@@ -20,17 +18,7 @@ from ..models import (
     ProfileRecord,
     ReviewObjectType,
 )
-from ..supabase_client import get_supabase_client
-
-T = TypeVar("T")
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _resolve_client(client: Client | None) -> Client:
-    return client or get_supabase_client()
+from .helpers import _log_action, _now, _paginate, _resolve_client
 
 
 def _hydrate_approval_request(row: dict[str, Any]) -> ApprovalRequestRecord:
@@ -45,72 +33,25 @@ def _hydrate_flag(row: dict[str, Any]) -> FlagRecord:
     return FlagRecord(**row)
 
 
-def _hydrate_admin_action(row: dict[str, Any]) -> AdminActionRecord:
-    return AdminActionRecord(**row)
-
-
-def _paginate(
-    response: APIResponse,
-    *,
-    page: int,
-    page_size: int,
-    hydrate: Callable[[dict[str, Any]], T],
-) -> Page[T]:
-    return Page[T](
-        items=[hydrate(row) for row in response.data],
-        page=page,
-        page_size=page_size,
-        total=response.count or 0,
-    )
-
-
 def _request_by_id(client: Client, request_id: UUID) -> ApprovalRequestRecord | None:
     response = client.table("approval_requests").select("*").eq("id", str(request_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_approval_request(response.data)
 
 
 def _profile_by_id(client: Client, user_id: UUID) -> ProfileRecord | None:
     response = client.table("profiles").select("*").eq("id", str(user_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_profile(response.data)
 
 
 def _flag_by_id(client: Client, flag_id: UUID) -> FlagRecord | None:
     response = client.table("flags").select("*").eq("id", str(flag_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_flag(response.data)
-
-
-def _log_action(
-    actor_id: UUID,
-    target_type: ReviewObjectType | str,
-    target_id: UUID,
-    action: ModerationAction,
-    *,
-    reason: str | None = None,
-    payload: dict[str, Any] | None = None,
-    client: Client | None = None,
-) -> AdminActionRecord:
-    resolved_client = _resolve_client(client)
-    response = (
-        resolved_client.table("admin_actions")
-        .insert(
-            {
-                "actor_id": str(actor_id),
-                "target_type": str(target_type),
-                "target_id": str(target_id),
-                "action": str(action),
-                "reason": reason,
-                "payload": payload or {},
-            }
-        )
-        .execute()
-    )
-    return _hydrate_admin_action(response.data[0])
 
 
 def _insert_ban(

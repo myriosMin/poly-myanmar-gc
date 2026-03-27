@@ -28,8 +28,9 @@ def _paginate(
     page_size: int,
     hydrate: Callable[[dict[str, Any]], T],
 ) -> Page[T]:
+    rows = response.data or []
     return Page[T](
-        items=[hydrate(row) for row in response.data],
+        items=[hydrate(row) for row in rows],
         page=page,
         page_size=page_size,
         total=response.count or 0,

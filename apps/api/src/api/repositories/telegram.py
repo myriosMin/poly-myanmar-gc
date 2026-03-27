@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from importlib import import_module
-from inspect import signature
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
 
 from postgrest import CountMethod
@@ -17,7 +15,10 @@ from ..models import (
     TelegramWebhookRequest,
     TelegramWebhookResponse,
 )
+from .admin import resolve_flag, review_user_application
+from .events import publish_event_draft
 from .helpers import _now, _resolve_client
+from .resources import publish_resource
 
 
 def _hydrate_token(row: dict[str, Any]) -> TelegramActionTokenRecord:
@@ -26,45 +27,14 @@ def _hydrate_token(row: dict[str, Any]) -> TelegramActionTokenRecord:
 
 def _token_by_id(client: Client, token_id: UUID) -> TelegramActionTokenRecord | None:
     response = client.table("telegram_action_tokens").select("*").eq("id", str(token_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_token(response.data)
 
 
-def _load_dispatcher(review_object_type: ReviewObjectType, module_name: str, function_name: str) -> Callable[..., Any]:
-    # Telegram can land before every domain repository exists, so make that dependency explicit.
-    try:
-        module = import_module(module_name)
-    except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            f"Telegram webhook dispatch for {review_object_type.value} requires {module_name}, "
-            "which is not available in this branch yet"
-        ) from exc
-
-    dispatcher = getattr(module, function_name, None)
-    if dispatcher is None:
-        raise RuntimeError(
-            f"Telegram webhook dispatch for {review_object_type.value} requires "
-            f"{module_name}.{function_name}()"
-        )
-    return dispatcher
-
-
-def _call_dispatcher(dispatcher: Callable[..., Any], *args: Any, client: Client, **kwargs: Any) -> Any:
-    if "client" in signature(dispatcher).parameters:
-        kwargs["client"] = client
-    return dispatcher(*args, **kwargs)
-
-
 def _dispatch_webhook(actor: ProfileRecord, payload: TelegramWebhookRequest, *, client: Client) -> None:
     if payload.review_object_type == ReviewObjectType.user_application:
-        dispatcher = _load_dispatcher(
-            payload.review_object_type,
-            "api.repositories.admin",
-            "review_user_application",
-        )
-        _call_dispatcher(
-            dispatcher,
+        review_user_application(
             actor,
             payload.review_object_id,
             action=payload.action,
@@ -76,13 +46,7 @@ def _dispatch_webhook(actor: ProfileRecord, payload: TelegramWebhookRequest, *, 
     if payload.review_object_type == ReviewObjectType.resource_submission:
         if payload.action not in {ModerationAction.approve, ModerationAction.reject}:
             raise ValueError("Unsupported resource submission action")
-        dispatcher = _load_dispatcher(
-            payload.review_object_type,
-            "api.repositories.resources",
-            "publish_resource",
-        )
-        _call_dispatcher(
-            dispatcher,
+        publish_resource(
             actor,
             payload.review_object_id,
             approved=payload.action == ModerationAction.approve,
@@ -94,13 +58,7 @@ def _dispatch_webhook(actor: ProfileRecord, payload: TelegramWebhookRequest, *, 
     if payload.review_object_type == ReviewObjectType.draft_event:
         if payload.action not in {ModerationAction.approve, ModerationAction.reject}:
             raise ValueError("Unsupported draft event action")
-        dispatcher = _load_dispatcher(
-            payload.review_object_type,
-            "api.repositories.events",
-            "publish_event_draft",
-        )
-        _call_dispatcher(
-            dispatcher,
+        publish_event_draft(
             actor,
             payload.review_object_id,
             approved=payload.action == ModerationAction.approve,
@@ -110,13 +68,7 @@ def _dispatch_webhook(actor: ProfileRecord, payload: TelegramWebhookRequest, *, 
         return
 
     if payload.review_object_type == ReviewObjectType.collab_flag:
-        dispatcher = _load_dispatcher(
-            payload.review_object_type,
-            "api.repositories.admin",
-            "resolve_flag",
-        )
-        _call_dispatcher(
-            dispatcher,
+        resolve_flag(
             actor,
             payload.review_object_id,
             action=payload.action,
@@ -174,6 +126,8 @@ def apply_telegram_webhook(
         raise ValueError("Token does not match payload")
     if token.action != payload.action:
         raise ValueError("Token action mismatch")
+    if token.actor_telegram_id is not None and payload.telegram_user_id != token.actor_telegram_id:
+        raise ValueError("Telegram user mismatch")
 
     _dispatch_webhook(actor, payload, client=resolved_client)
 

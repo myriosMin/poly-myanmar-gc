@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from postgrest import APIResponse, CountMethod
+from postgrest import CountMethod
 from supabase import Client
 
 from ..models import (
-    AdminActionRecord,
     ApprovalState,
     ModerationAction,
     Page,
@@ -18,15 +16,7 @@ from ..models import (
     ResourceSubmissionRequest,
     ReviewObjectType,
 )
-from ..supabase_client import get_supabase_client
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _resolve_client(client: Client | None) -> Client:
-    return client or get_supabase_client()
+from .helpers import _log_action, _now, _paginate, _resolve_client
 
 
 def _hydrate_resource(row: dict[str, Any]) -> ResourceRecord:
@@ -37,65 +27,18 @@ def _hydrate_submission(row: dict[str, Any]) -> ResourceSubmissionRecord:
     return ResourceSubmissionRecord(**row)
 
 
-def _hydrate_admin_action(row: dict[str, Any]) -> AdminActionRecord:
-    return AdminActionRecord(**row)
-
-
-def _paginate(
-    response: APIResponse,
-    *,
-    page: int,
-    page_size: int,
-    hydrate: Any,
-) -> Page[Any]:
-    return Page(
-        items=[hydrate(row) for row in response.data],
-        page=page,
-        page_size=page_size,
-        total=response.count or 0,
-    )
-
-
 def _submission_by_id(client: Client, submission_id: UUID) -> ResourceSubmissionRecord | None:
     response = client.table("resource_submissions").select("*").eq("id", str(submission_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_submission(response.data)
 
 
 def _resource_by_id(client: Client, resource_id: UUID) -> ResourceRecord | None:
     response = client.table("resources").select("*").eq("id", str(resource_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_resource(response.data)
-
-
-def _log_action(
-    actor_id: UUID,
-    target_type: ReviewObjectType | str,
-    target_id: UUID,
-    action: ModerationAction,
-    *,
-    reason: str | None = None,
-    payload: dict[str, Any] | None = None,
-    client: Client | None = None,
-) -> AdminActionRecord:
-    resolved_client = _resolve_client(client)
-    response = (
-        resolved_client.table("admin_actions")
-        .insert(
-            {
-                "actor_id": str(actor_id),
-                "target_type": str(target_type),
-                "target_id": str(target_id),
-                "action": str(action),
-                "reason": reason,
-                "payload": payload or {},
-            }
-        )
-        .execute()
-    )
-    return _hydrate_admin_action(response.data[0])
 
 
 def list_resources(
