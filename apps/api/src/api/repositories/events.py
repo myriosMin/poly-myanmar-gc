@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from postgrest import APIResponse, CountMethod
+from postgrest import CountMethod
 from supabase import Client
 
 from ..models import (
-    AdminActionRecord,
     ApprovalState,
     EventDraftRecord,
     EventOrigin,
@@ -21,15 +19,7 @@ from ..models import (
     RsvpRecord,
     RsvpStatus,
 )
-from ..supabase_client import get_supabase_client
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _resolve_client(client: Client | None) -> Client:
-    return client or get_supabase_client()
+from .helpers import _count_rows, _log_action, _now, _paginate, _resolve_client
 
 
 def _hydrate_event(row: dict[str, Any]) -> EventRecord:
@@ -43,80 +33,26 @@ def _hydrate_event_draft(row: dict[str, Any]) -> EventDraftRecord:
 def _hydrate_rsvp(row: dict[str, Any]) -> RsvpRecord:
     return RsvpRecord(**row)
 
-
-def _hydrate_admin_action(row: dict[str, Any]) -> AdminActionRecord:
-    return AdminActionRecord(**row)
-
-
-def _event_page(response: APIResponse, *, page: int, page_size: int) -> Page[EventRecord]:
-    return Page[EventRecord](
-        items=[_hydrate_event(row) for row in response.data],
-        page=page,
-        page_size=page_size,
-        total=response.count or 0,
-    )
-
-
-def _event_draft_page(response: APIResponse, *, page: int, page_size: int) -> Page[EventDraftRecord]:
-    return Page[EventDraftRecord](
-        items=[_hydrate_event_draft(row) for row in response.data],
-        page=page,
-        page_size=page_size,
-        total=response.count or 0,
-    )
-
-
 def _event_by_id(client: Client, event_id: UUID) -> EventRecord | None:
     response = client.table("events").select("*").eq("id", str(event_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_event(response.data)
 
 
 def _draft_by_id(client: Client, draft_id: UUID) -> EventDraftRecord | None:
     response = client.table("event_drafts").select("*").eq("id", str(draft_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_event_draft(response.data)
 
 
 def _count_going_rsvps(client: Client, event_id: UUID) -> int:
-    response = (
-        client.table("event_rsvps")
-        .select("event_id", count=CountMethod.exact)
-        .eq("event_id", str(event_id))
-        .eq("status", str(RsvpStatus.going))
-        .execute()
+    return _count_rows(
+        "event_rsvps",
+        client=client,
+        apply_filters=lambda query: query.eq("event_id", str(event_id)).eq("status", str(RsvpStatus.going)),
     )
-    return response.count or 0
-
-
-def _log_action(
-    actor_id: UUID,
-    target_type: ReviewObjectType | str,
-    target_id: UUID,
-    action: ModerationAction,
-    *,
-    reason: str | None = None,
-    payload: dict[str, Any] | None = None,
-    client: Client | None = None,
-) -> AdminActionRecord:
-    resolved_client = _resolve_client(client)
-    response = (
-        resolved_client.table("admin_actions")
-        .insert(
-            {
-                "actor_id": str(actor_id),
-                "target_type": str(target_type),
-                "target_id": str(target_id),
-                "action": str(action),
-                "reason": reason,
-                "payload": payload or {},
-            }
-        )
-        .execute()
-    )
-    return _hydrate_admin_action(response.data[0])
 
 
 def list_events(
@@ -134,7 +70,7 @@ def list_events(
         .range(offset, offset + page_size - 1)
         .execute()
     )
-    return _event_page(response, page=page, page_size=page_size)
+    return _paginate(response, page=page, page_size=page_size, hydrate=_hydrate_event)
 
 
 def list_event_drafts_pending(
@@ -153,7 +89,7 @@ def list_event_drafts_pending(
         .range(offset, offset + page_size - 1)
         .execute()
     )
-    return _event_draft_page(response, page=page, page_size=page_size)
+    return _paginate(response, page=page, page_size=page_size, hydrate=_hydrate_event_draft)
 
 
 def rsvp_event(

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from typing import Any, Callable, TypeVar
+from typing import Any
 from uuid import UUID
 
-from postgrest import APIResponse, CountMethod
+from postgrest import CountMethod
 from supabase import Client
 
 from ..models import (
-    AdminActionRecord,
     ApprovalState,
     CollabCreateRequest,
     CollabMembershipRecord,
@@ -19,17 +17,7 @@ from ..models import (
     ProfileRecord,
     ReviewObjectType,
 )
-from ..supabase_client import get_supabase_client
-
-T = TypeVar("T")
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)
-
-
-def _resolve_client(client: Client | None) -> Client:
-    return client or get_supabase_client()
+from .helpers import _count_rows, _log_action, _now, _paginate, _resolve_client
 
 
 def _hydrate_collab(row: dict[str, Any]) -> CollabProjectRecord:
@@ -40,41 +28,19 @@ def _hydrate_membership(row: dict[str, Any]) -> CollabMembershipRecord:
     return CollabMembershipRecord(**row)
 
 
-def _hydrate_admin_action(row: dict[str, Any]) -> AdminActionRecord:
-    return AdminActionRecord(**row)
-
-
-def _paginate(
-    response: APIResponse,
-    *,
-    page: int,
-    page_size: int,
-    hydrate: Callable[[dict[str, Any]], T],
-) -> Page[T]:
-    return Page[T](
-        items=[hydrate(row) for row in response.data],
-        page=page,
-        page_size=page_size,
-        total=response.count or 0,
-    )
-
-
 def _collab_by_id(client: Client, collab_id: UUID) -> CollabProjectRecord | None:
     response = client.table("collab_projects").select("*").eq("id", str(collab_id)).maybe_single().execute()
-    if response is None:
+    if response is None or response.data is None:
         return None
     return _hydrate_collab(response.data)
 
 
 def _count_collab_members(client: Client, collab_id: UUID) -> int:
-    response = (
-        client.table("collab_memberships")
-        .select("collab_id", count=CountMethod.exact)
-        .eq("collab_id", str(collab_id))
-        .not_.eq("state", "left")
-        .execute()
+    return _count_rows(
+        "collab_memberships",
+        client=client,
+        apply_filters=lambda query: query.eq("collab_id", str(collab_id)).not_.eq("state", "left"),
     )
-    return response.count or 0
 
 
 def _recount_collab_members(client: Client, collab_id: UUID) -> CollabProjectRecord | None:
@@ -83,34 +49,6 @@ def _recount_collab_members(client: Client, collab_id: UUID) -> CollabProjectRec
     if not response.data:
         return None
     return _hydrate_collab(response.data[0])
-
-
-def _log_action(
-    actor_id: UUID,
-    target_type: ReviewObjectType | str,
-    target_id: UUID,
-    action: ModerationAction,
-    *,
-    reason: str | None = None,
-    payload: dict[str, Any] | None = None,
-    client: Client | None = None,
-) -> AdminActionRecord:
-    resolved_client = _resolve_client(client)
-    response = (
-        resolved_client.table("admin_actions")
-        .insert(
-            {
-                "actor_id": str(actor_id),
-                "target_type": str(target_type),
-                "target_id": str(target_id),
-                "action": str(action),
-                "reason": reason,
-                "payload": payload or {},
-            }
-        )
-        .execute()
-    )
-    return _hydrate_admin_action(response.data[0])
 
 
 def list_collabs(
