@@ -414,14 +414,9 @@ export const mockApi = {
     session = {
       ...session,
       name: input.name,
-      polytechnic: input.polytechnic,
       approvalState: 'pending',
+      email: input.email,
       linkedinUrl: input.linkedinUrl,
-      githubUrl: input.githubUrl || undefined,
-      portfolioUrl: input.portfolioUrl || undefined,
-      statusBadge: input.statusBadge,
-      openToCollab: input.openToCollab,
-      jobSeeking: input.jobSeeking,
     }
 
     adminQueue = [
@@ -429,7 +424,7 @@ export const mockApi = {
         id: `queue-${Date.now()}`,
         type: 'user_application',
         title: input.name,
-        summary: `${input.polytechnic} verified via LinkedIn. Waiting on reviewer approval.`,
+        summary: 'LinkedIn profile provided. Waiting on reviewer approval.',
         submittedBy: input.linkedinUrl,
         createdAt: new Date().toISOString(),
         actions: ['approve', 'reject'],

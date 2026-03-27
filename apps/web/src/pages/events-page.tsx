@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { cn, formatDateTime } from '@/lib/utils'
 
 export function EventsPage() {
@@ -16,12 +16,12 @@ export function EventsPage() {
   const queryClient = useQueryClient()
   const eventsQuery = useQuery({
     queryKey: ['events'],
-    queryFn: () => mockApi.getEvents(),
+    queryFn: () => api.getEvents(),
   })
 
   const rsvpMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'going' | 'interested' | 'not_going' }) =>
-      mockApi.setRsvp(id, status),
+      api.setRsvp(id, status),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'] })
     },
@@ -181,15 +181,13 @@ export function EventsPage() {
                     <Users className="h-4 w-4 text-primary" />
                     <p className="mt-3 text-muted-foreground">Attendance</p>
                     <p className="mt-1 font-medium text-foreground">
-                      {event.attendees.length}/{event.capacity} going
+                      {event.attendanceCount}/{event.capacity || '-'} going
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-muted-foreground">
-                    Attending: {event.attendees.join(', ') || 'No attendees yet'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Attendance list is not exposed by the API.</p>
                   <div className="flex flex-wrap gap-2">
                     {(['going', 'interested', 'not_going'] as const).map((status) => (
                       <Button

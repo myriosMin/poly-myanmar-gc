@@ -265,7 +265,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
         <header className="surface-blur sticky top-4 z-20 rounded-[2rem] px-4 py-4 md:px-6">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="section-kicker">Myanmar polytechnic network in Singapore</p>
+              <p className="section-kicker">Graduate Club</p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <p className="font-display text-3xl font-semibold">Poly Myanmar</p>
                 <Badge variant="outline">Private member access</Badge>

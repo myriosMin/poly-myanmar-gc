@@ -169,17 +169,8 @@ export interface ProfileFilters {
 
 export interface OnboardingInput {
   name: string
-  polytechnic: Polytechnic
-  course: string
-  graduationYear: string
+  email: string
   linkedinUrl: string
-  githubUrl: string
-  portfolioUrl: string
-  skills: string
-  hobbies: string
-  openToCollab: boolean
-  jobSeeking: boolean
-  statusBadge: StudentStatus
 }
 
 export interface ResourceSubmissionInput {

@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { PageHeader } from '@/components/layout/page-header'
+import { api } from '@/lib/api'
 import { publicProfileFields, studentStatuses } from '@/lib/domain'
-import { mockApi } from '@/lib/mock-api'
 import { settingsSchema, type SettingsForm } from '@/lib/schemas'
 
 const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
@@ -28,7 +28,7 @@ export function SettingsPage() {
   const queryClient = useQueryClient()
   const settingsQuery = useQuery({
     queryKey: ['settings'],
-    queryFn: () => mockApi.getSettings(),
+    queryFn: () => api.getSettings(),
   })
 
   const form = useForm<SettingsForm>({
@@ -63,7 +63,7 @@ export function SettingsPage() {
   }, [form, settingsQuery.data])
 
   const saveMutation = useMutation({
-    mutationFn: mockApi.updateSettings,
+    mutationFn: api.updateSettings,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
       await queryClient.invalidateQueries({ queryKey: ['session'] })
