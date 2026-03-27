@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyState } from '@/components/layout/empty-state'
+import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { FullscreenModal, MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
 import type { CollabCreateInput } from '@/lib/domain'
@@ -133,15 +134,19 @@ export function CollabPage() {
     },
   })
 
-  const filteredProjects = useMemo(() => {
-    const items = collabQuery.data?.items ?? []
+  const collabItems = collabQuery.data?.items
 
-    if (!typeFilter) {
-      return items
+  const filteredProjects = useMemo(() => {
+    if (!collabItems) {
+      return []
     }
 
-    return items.filter((project) => project.type === typeFilter)
-  }, [collabQuery.data?.items, typeFilter])
+    if (!typeFilter) {
+      return collabItems
+    }
+
+    return collabItems.filter((project) => project.type === typeFilter)
+  }, [collabItems, typeFilter])
 
   const sidebar = (
     <div className="filter-panel sticky-rail">
@@ -228,6 +233,7 @@ export function CollabPage() {
         description="Filter the board by type, scan the essentials, and post a new collaboration only when you have clear context."
         actions={
           <>
+            <HeaderSocialLinks />
             <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
               {filteredProjects.length} visible
             </Badge>

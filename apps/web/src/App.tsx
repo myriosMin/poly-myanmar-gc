@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell, PublicShell } from '@/components/layout/shell'
 import { useSessionQuery } from '@/lib/query'
@@ -10,8 +10,12 @@ import { ResourcesPage } from '@/pages/resources-page'
 import { CollabPage } from '@/pages/collab-page'
 import { AdminPage } from '@/pages/admin-page'
 import { SettingsPage } from '@/pages/settings-page'
-import { LegalPage } from '@/pages/legal-page'
 import { LoadingScreen } from '@/components/layout/loading-screen'
+
+const LegalPage = lazy(async () => {
+  const module = await import('@/pages/legal-page')
+  return { default: module.LegalPage }
+})
 
 function RequireApproved({ children }: { children: ReactNode }) {
   const { data: session, isLoading } = useSessionQuery()
@@ -45,6 +49,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate replace to="/auth" />} />
         <Route
           path="/auth"
           element={
@@ -53,6 +58,8 @@ export default function App() {
             </PublicShell>
           }
         />
+        <Route path="/privacy" element={<Navigate replace to="/legal/privacy" />} />
+        <Route path="/terms" element={<Navigate replace to="/legal/terms" />} />
         <Route
           path="/pending-approval"
           element={
@@ -65,7 +72,9 @@ export default function App() {
           path="/legal/:slug"
           element={
             <PublicShell>
-              <LegalPage />
+              <Suspense fallback={<LoadingScreen />}>
+                <LegalPage />
+              </Suspense>
             </PublicShell>
           }
         />

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyState } from '@/components/layout/empty-state'
+import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { FullscreenModal, MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
 import type { ResourceSubmissionInput } from '@/lib/domain'
@@ -119,17 +120,21 @@ export function ResourcesPage() {
     },
   })
 
-  const filteredResources = useMemo(() => {
-    const items = resourcesQuery.data?.items ?? []
+  const resourceItems = resourcesQuery.data?.items
 
-    if (!categoryFilter) {
-      return items
+  const filteredResources = useMemo(() => {
+    if (!resourceItems) {
+      return []
     }
 
-    return items.filter((resource) =>
+    if (!categoryFilter) {
+      return resourceItems
+    }
+
+    return resourceItems.filter((resource) =>
       resource.categories.includes(categoryFilter),
     )
-  }, [categoryFilter, resourcesQuery.data?.items])
+  }, [categoryFilter, resourceItems])
 
   const sidebar = (
     <div className="filter-panel sticky-rail">
@@ -216,6 +221,7 @@ export function ResourcesPage() {
         description="Scan by category, open what matters, and post only resources another member would realistically reuse."
         actions={
           <>
+            <HeaderSocialLinks />
             <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
               {filteredResources.length} visible
             </Badge>
