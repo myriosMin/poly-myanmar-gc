@@ -3,13 +3,15 @@ from __future__ import annotations
 import json
 import time
 
+from .api_client import ApiClient
 from .jobs import WorkerEngine
 from .settings import load_settings
 
 
 def main() -> None:
     settings = load_settings()
-    engine = WorkerEngine(settings)
+    api_client = ApiClient(settings.api_base_url, settings.actor_id)
+    engine = WorkerEngine(settings, api_client=api_client)
 
     def run_cycle() -> None:
         report = engine.run_once()

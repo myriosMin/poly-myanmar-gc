@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 from .settings import WorkerSettings
+
+if TYPE_CHECKING:
+    from .api_client import ApiClient
 
 
 @dataclass(slots=True)
@@ -41,8 +45,9 @@ class WorkerReport:
 
 
 class WorkerEngine:
-    def __init__(self, settings: WorkerSettings) -> None:
+    def __init__(self, settings: WorkerSettings, api_client: ApiClient | None = None) -> None:
         self.settings = settings
+        self.api_client = api_client
         self._tokens = [
             {"id": uuid4(), "expires_at": datetime.now(UTC) - timedelta(minutes=5)},
             {"id": uuid4(), "expires_at": datetime.now(UTC) + timedelta(minutes=30)},
@@ -68,11 +73,8 @@ class WorkerEngine:
 
     def detect_suspicious_activity(self) -> list[SuspiciousActivityFlag]:
         suspicious_domains = {"bit.ly", "tinyurl.com", "goo.gl"}
-        samples = [
-            ("resource_submission", uuid4(), "medium", "Repeated rejected submissions from the same member"),
-            ("collab_flag", uuid4(), "high", "Burst of removals tied to one listing"),
-        ]
-        flags = [SuspiciousActivityFlag(subject_type=s_type, subject_id=s_id, severity=severity, reason=reason) for s_type, s_id, severity, reason in samples]
+        trusted_domains = {"www.imda.gov.sg", "www.singaporetech.edu.sg"}
+        flags: list[SuspiciousActivityFlag] = []
         for feed in self.settings.source_feeds:
             hostname = urlparse(feed).hostname or ""
             if hostname in suspicious_domains:
@@ -81,6 +83,14 @@ class WorkerEngine:
                         subject_type="resource_submission",
                         severity="high",
                         reason=f"Suspicious event source: {hostname}",
+                    )
+                )
+            elif hostname and hostname not in trusted_domains:
+                flags.append(
+                    SuspiciousActivityFlag(
+                        subject_type="resource_submission",
+                        severity="medium",
+                        reason=f"Unverified event source domain: {hostname}",
                     )
                 )
         return flags
@@ -95,6 +105,13 @@ class WorkerEngine:
         report = WorkerReport(started_at=datetime.now(UTC))
         report.generated_drafts = self.source_weekly_events()
         report.suspicious_flags = self.detect_suspicious_activity()
+
+        if self.api_client is not None:
+            for draft in report.generated_drafts:
+                self.api_client.push_event_draft(draft)
+            for flag in report.suspicious_flags:
+                self.api_client.push_flag(flag)
+
         report.expired_tokens_cleared = self.sweep_expired_tokens()
         report.notifications_sent = len(report.generated_drafts) + len(report.suspicious_flags)
         report.finished_at = datetime.now(UTC)

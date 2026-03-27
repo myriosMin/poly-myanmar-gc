@@ -114,6 +114,26 @@ def reject_event_draft(
     return store.publish_event_draft(actor, draft_id, approved=False)
 
 
+@router.post("/event-drafts", response_model=EventDraftRecord)
+def create_event_draft(
+    draft: EventDraftRecord,
+    actor: ProfileRecord = Depends(require_superadmin),
+    store: StoreProtocol = Depends(get_store),
+) -> EventDraftRecord:
+    """Worker-only: push a generated event draft for admin review."""
+    return store.store_event_draft(draft)
+
+
+@router.post("/flags", response_model=FlagRecord)
+def create_flag(
+    flag: FlagRecord,
+    actor: ProfileRecord = Depends(require_superadmin),
+    store: StoreProtocol = Depends(get_store),
+) -> FlagRecord:
+    """Worker-only: push a suspicious-activity flag for admin review."""
+    return store.store_flag(flag)
+
+
 @router.get("/flags", response_model=Page[FlagRecord])
 def list_flags(
     _: ProfileRecord = Depends(require_reviewer),
