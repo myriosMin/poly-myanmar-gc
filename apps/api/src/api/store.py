@@ -6,6 +6,7 @@ from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID
 
+from .store_protocol import StoreProtocol
 from .models import (
     AdminActionRecord,
     ApprovalRequestRecord,
@@ -847,7 +848,12 @@ class InMemoryStore:
         )
 
 
-def create_store(backend: str = "memory") -> InMemoryStore:
+def create_store(backend: str = "memory") -> StoreProtocol:
     if backend == "memory":
         return InMemoryStore()
+    if backend == "supabase":
+        from .supabase_client import get_supabase_client
+        from .supabase_store import SupabaseStore
+
+        return SupabaseStore(get_supabase_client())
     raise ValueError(f"Unknown store backend: {backend}")
