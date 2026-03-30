@@ -284,8 +284,16 @@ export function ProfilesPage() {
     queryFn: () => api.getProfiles(filters),
   })
 
-  const selectedProfile =
+  const selectedProfileFromList =
     profilesQuery.data?.items.find((profile) => profile.id === selectedProfileId) ?? null
+
+  const selectedProfileQuery = useQuery({
+    queryKey: ['profile', selectedProfileId],
+    queryFn: () => (selectedProfileId ? api.getProfileById(selectedProfileId) : null),
+    enabled: Boolean(selectedProfileId),
+  })
+
+  const selectedProfile = selectedProfileQuery.data ?? selectedProfileFromList
 
   const resetFilters = () => {
     setSearchDraft('')
