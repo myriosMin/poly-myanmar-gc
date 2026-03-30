@@ -61,13 +61,16 @@ jobs:
         run: python -m pip install uv
 
       - name: Sync API dependencies
-        run: uv sync --directory apps/api
+        run: uv sync --directory apps/api --extra dev
 
       - name: Sync worker dependencies
         run: uv sync --directory apps/worker
 
       - name: Run API smoke tests
         run: make test-api
+
+      - name: Run API contract tests
+        run: make pytest-api
 
       - name: Run worker smoke tests
         run: make test-worker
