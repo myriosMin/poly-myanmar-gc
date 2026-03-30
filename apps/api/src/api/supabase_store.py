@@ -221,6 +221,12 @@ class SupabaseStore:
     def detect_suspicious_activity(self) -> list[FlagRecord]:
         return admin.detect_suspicious_activity(client=self._client)
 
+    def store_event_draft(self, draft: EventDraftRecord) -> EventDraftRecord:
+        return admin.store_event_draft(draft, client=self._client)
+
+    def store_flag(self, flag: FlagRecord) -> FlagRecord:
+        return admin.store_flag(flag, client=self._client)
+
     def queue_counts(self) -> QueueCounts:
         return health.queue_counts(client=self._client)
 
