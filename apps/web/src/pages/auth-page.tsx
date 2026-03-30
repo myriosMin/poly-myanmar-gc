@@ -22,6 +22,7 @@ import {
   getAuthenticatedUser,
   isSupabaseAuthConfigured,
   signInOrSignUpWithPassword,
+  signInWithGoogle,
 } from '@/lib/supabase'
 import { onboardingSchema, type OnboardingForm } from '@/lib/schemas'
 
@@ -94,6 +95,50 @@ export function AuthPage() {
       navigate('/pending-approval')
     },
   })
+
+  const googleMutation = useMutation({
+    mutationFn: async () => {
+      setNotice(null)
+
+      const isValid = await form.trigger(['username', 'linkedinUrl'])
+      if (!isValid) {
+        throw new Error('Add your username and LinkedIn URL before continuing with Google.')
+      }
+
+      const draft: OnboardingInput = {
+        username: form.getValues('username').trim(),
+        email: form.getValues('email').trim(),
+        linkedinUrl: form.getValues('linkedinUrl').trim(),
+      }
+      globalThis.localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft))
+      await signInWithGoogle()
+    },
+  })
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateEmailFromAuth = async () => {
+      try {
+        const authUser = await getAuthenticatedUser()
+        if (cancelled) {
+          return
+        }
+        if (!authUser.email) {
+          return
+        }
+        form.setValue('email', authUser.email, { shouldValidate: true })
+      } catch {
+        // Ignore when there is no active Supabase session yet.
+      }
+    }
+
+    void hydrateEmailFromAuth()
+
+    return () => {
+      cancelled = true
+    }
+  }, [form])
 
   useEffect(() => {
     const rawDraft = globalThis.localStorage.getItem(ONBOARDING_DRAFT_KEY)
@@ -174,14 +219,11 @@ export function AuthPage() {
                   style={{ animationDelay: `${index * 90}ms` }}
                 >
                   <item.icon className="h-5 w-5 text-primary" />
-                  <p className="section-title mt-5 !text-[1.9rem] leading-tight">
-                    {item.title}
-                  </p>
+                  <p className="section-title mt-5 !text-[1.9rem] leading-tight">{item.title}</p>
                   <p className="body-copy mt-2 !text-sm">{item.body}</p>
                 </div>
               ))}
             </div>
-
           </div>
         </div>
 
@@ -215,15 +257,27 @@ export function AuthPage() {
               </div>
             ) : null}
 
+            {googleMutation.error instanceof Error ? (
+              <div className="rounded-[1rem] border border-destructive/35 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+                {googleMutation.error.message}
+              </div>
+            ) : null}
+
             {notice ? (
               <div className="rounded-[1rem] border border-primary/30 bg-primary/8 px-4 py-3 text-sm text-foreground">
                 {notice}
               </div>
             ) : null}
 
-            <Button type="button" variant="outline" className="w-full" disabled>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={!isSupabaseAuthConfigured || submitMutation.isPending || googleMutation.isPending}
+              onClick={() => googleMutation.mutate()}
+            >
               <Sparkles className="h-4 w-4" />
-              Continue with Google (coming soon)
+              {googleMutation.isPending ? 'Redirecting to Google...' : 'Continue with Google'}
             </Button>
 
             <Button type="button" variant="outline" className="w-full" disabled>
