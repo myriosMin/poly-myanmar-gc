@@ -1,6 +1,6 @@
 SHELL := /bin/zsh
 
-.PHONY: help install install-web install-api install-worker dev-web dev-api dev-worker build-web lint-web test-api test-worker test smoke smoke-supabase clean
+.PHONY: help install install-web install-api install-worker dev-web dev-api dev-worker build-web lint-web test-api pytest-api test-worker test smoke smoke-supabase clean
 
 help:
 	@printf "Targets:\n"
