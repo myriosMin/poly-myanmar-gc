@@ -204,7 +204,10 @@ function createAvatar(seed: string): string {
 function toSession(profile: ApiProfile): Session {
   const statusBadges = profile.status_badges ?? []
   const jobSeeking = profile.job_seeking ?? false
-  const polytechnic = profile.polytechnic ?? 'SP'
+  const polytechnic =
+    profile.polytechnic && polytechnics.includes(profile.polytechnic as (typeof polytechnics)[number])
+      ? (profile.polytechnic as Session['polytechnic'])
+      : null
   const statusBadge =
     (statusBadges.find((badge) =>
       studentStatuses.includes(badge as (typeof studentStatuses)[number]),
@@ -217,9 +220,8 @@ function toSession(profile: ApiProfile): Session {
     email: profile.email,
     role: profile.role,
     approvalState: profile.approval_status,
-    polytechnic: (polytechnics.includes(polytechnic as (typeof polytechnics)[number])
-      ? polytechnic
-      : 'SP') as Session['polytechnic'],
+    polytechnic,
+    course: profile.course,
     linkedinUrl: profile.linkedin_url,
     githubUrl: profile.github_url ?? undefined,
     portfolioUrl: profile.portfolio_url ?? undefined,
@@ -645,6 +647,8 @@ export const api = {
   async updateSettings(update: Partial<Session>) {
     const payload: Record<string, unknown> = {}
     if (update.name !== undefined) payload.name = update.name
+    if (update.polytechnic !== undefined) payload.polytechnic = update.polytechnic
+    if (update.course !== undefined) payload.course = update.course
     if (update.linkedinUrl !== undefined) payload.linkedin_url = update.linkedinUrl
     if (update.githubUrl !== undefined) payload.github_url = update.githubUrl || null
     if (update.portfolioUrl !== undefined) payload.portfolio_url = update.portfolioUrl || null

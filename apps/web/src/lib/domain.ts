@@ -63,7 +63,8 @@ export interface Session {
   email: string
   role: Role
   approvalState: ApprovalState
-  polytechnic: Polytechnic
+  polytechnic: Polytechnic | null
+  course: string | null
   linkedinUrl?: string
   githubUrl?: string
   portfolioUrl?: string
