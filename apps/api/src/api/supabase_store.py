@@ -88,8 +88,14 @@ class SupabaseStore:
 
     # -- events --
 
-    def list_events(self, *, page: int = 1, page_size: int = 20) -> Page[EventRecord]:
-        return events.list_events(page=page, page_size=page_size, client=self._client)
+    def list_events(
+        self,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+        days_back: int | None = None,
+    ) -> Page[EventRecord]:
+        return events.list_events(page=page, page_size=page_size, days_back=days_back, client=self._client)
 
     def list_event_drafts_pending(self, *, page: int = 1, page_size: int = 20) -> Page[EventDraftRecord]:
         return events.list_event_drafts_pending(page=page, page_size=page_size, client=self._client)
@@ -107,6 +113,9 @@ class SupabaseStore:
     ) -> EventDraftRecord:
         return events.publish_event_draft(actor, draft_id, approved=approved, reason=reason, client=self._client)
 
+    def delete_event(self, actor: ProfileRecord, event_id: UUID) -> None:
+        events.delete_event(actor, event_id, client=self._client)
+
     # -- resources --
 
     def list_resources(self, *, page: int = 1, page_size: int = 20) -> Page[ResourceRecord]:
@@ -118,8 +127,15 @@ class SupabaseStore:
         page: int = 1,
         page_size: int = 20,
         status: ApprovalState | None = None,
+        submitted_by: UUID | None = None,
     ) -> Page[ResourceSubmissionRecord]:
-        return resources.list_resource_submissions(page=page, page_size=page_size, status=status, client=self._client)
+        return resources.list_resource_submissions(
+            page=page,
+            page_size=page_size,
+            status=status,
+            submitted_by=submitted_by,
+            client=self._client,
+        )
 
     def submit_resource(self, actor: ProfileRecord, payload: ResourceSubmissionRequest) -> ResourceSubmissionRecord:
         return resources.submit_resource(actor, payload, client=self._client)
@@ -134,6 +150,12 @@ class SupabaseStore:
     ) -> ResourceSubmissionRecord:
         return resources.publish_resource(actor, submission_id, approved=approved, reason=reason, client=self._client)
 
+    def delete_resource(self, actor: ProfileRecord, resource_id: UUID) -> None:
+        resources.delete_resource(actor, resource_id, client=self._client)
+
+    def delete_resource_submission(self, actor: ProfileRecord, submission_id: UUID) -> None:
+        resources.delete_resource_submission(actor, submission_id, client=self._client)
+
     # -- collab --
 
     def list_collabs(self, *, page: int = 1, page_size: int = 20) -> Page[CollabProjectRecord]:
@@ -147,6 +169,9 @@ class SupabaseStore:
 
     def leave_collab(self, actor: ProfileRecord, collab_id: UUID) -> None:
         collab.leave_collab(actor, collab_id, client=self._client)
+
+    def remove_collab(self, actor: ProfileRecord, collab_id: UUID) -> None:
+        collab.remove_collab(actor, collab_id, client=self._client)
 
     def delete_collab(self, actor: ProfileRecord, collab_id: UUID) -> None:
         collab.delete_collab(actor, collab_id, client=self._client)

@@ -161,10 +161,22 @@ def delete_collab(
     *,
     client: Client | None = None,
 ) -> None:
+    remove_collab(actor, collab_id, client=client)
+
+
+def remove_collab(
+    actor: ProfileRecord,
+    collab_id: UUID,
+    *,
+    client: Client | None = None,
+) -> None:
     resolved_client = _resolve_client(client)
     collab = _collab_by_id(resolved_client, collab_id)
     if collab is None:
         raise KeyError(f"Unknown collab: {collab_id}")
+
+    if actor.id != collab.created_by and not actor.is_admin:
+        raise PermissionError("Only collab owner or reviewer can remove collab")
 
     resolved_client.table("collab_projects").update({"status": str(CollabStatus.removed)}).eq("id", str(collab_id)).execute()
     _log_action(

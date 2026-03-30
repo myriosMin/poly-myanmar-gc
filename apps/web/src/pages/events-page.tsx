@@ -8,11 +8,14 @@ import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
+import { useSessionQuery } from '@/lib/query'
 import { cn, formatDateTime } from '@/lib/utils'
 
 export function EventsPage() {
   const [kindFilter, setKindFilter] = useState('')
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
+  const { data: session } = useSessionQuery()
+  const isReviewer = session?.role === 'reviewer' || session?.role === 'superadmin'
   const queryClient = useQueryClient()
   const eventsQuery = useQuery({
     queryKey: ['events'],
@@ -22,6 +25,12 @@ export function EventsPage() {
     refetchOnWindowFocus: false,
   })
 
+  const reviewerDraftsQuery = useQuery({
+    queryKey: ['reviewer-event-drafts'],
+    queryFn: () => api.getPendingEventDrafts(),
+    enabled: isReviewer,
+  })
+
   const refreshEvents = async () => {
     await queryClient.invalidateQueries({ queryKey: ['events'] })
   }
@@ -29,6 +38,23 @@ export function EventsPage() {
   const rsvpMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'going' | 'interested' | 'not_going' }) =>
       api.setRsvp(id, status),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+  })
+
+  const reviewDraftMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'publish' | 'reject' }) =>
+      action === 'publish' ? api.publishEventDraft(id) : api.rejectEventDraft(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['events'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-event-drafts'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
+    },
+  })
+
+  const deleteEventMutation = useMutation({
+    mutationFn: (id: string) => api.deleteEvent(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['events'] })
     },
@@ -159,6 +185,51 @@ export function EventsPage() {
         <aside className="hidden lg:block">{sidebar}</aside>
 
         <div className="space-y-4">
+          {isReviewer ? (
+            <div className="content-row bg-card/84">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="section-kicker">Reviewer controls</p>
+                  <p className="section-title mt-2">Pending event drafts</p>
+                </div>
+                <Badge variant="outline">{reviewerDraftsQuery.data?.length ?? 0}</Badge>
+              </div>
+              <div className="mt-4 space-y-3">
+                {(reviewerDraftsQuery.data ?? []).length ? (
+                  reviewerDraftsQuery.data?.map((draft) => (
+                    <div key={draft.id} className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-foreground">{draft.title}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{draft.description || `Source: ${draft.source_name}`}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => reviewDraftMutation.mutate({ id: draft.id, action: 'publish' })}
+                            disabled={reviewDraftMutation.isPending}
+                          >
+                            Publish
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => reviewDraftMutation.mutate({ id: draft.id, action: 'reject' })}
+                            disabled={reviewDraftMutation.isPending}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No pending drafts right now.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+
           {filteredEvents.length ? (
             filteredEvents.map((event) => (
               <div key={event.id} className="content-row">
@@ -207,6 +278,16 @@ export function EventsPage() {
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">Attendance list is not exposed by the API.</p>
                   <div className="flex flex-wrap gap-2">
+                    {(session?.id === event.createdBy || isReviewer) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteEventMutation.mutate(event.id)}
+                        disabled={deleteEventMutation.isPending}
+                      >
+                        Delete
+                      </Button>
+                    ) : null}
                     {(['going', 'interested', 'not_going'] as const).map((status) => (
                       <Button
                         key={status}

@@ -120,6 +120,7 @@ export interface EventItem {
   attendees: string[]
   myRsvp: RsvpStatus
   capacity: number
+  createdBy: string
 }
 
 export interface ResourceItem {

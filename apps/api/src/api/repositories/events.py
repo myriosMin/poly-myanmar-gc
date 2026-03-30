@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
@@ -59,17 +60,16 @@ def list_events(
     *,
     page: int = 1,
     page_size: int = 20,
+    days_back: int | None = None,
     client: Client | None = None,
 ) -> Page[EventRecord]:
     resolved_client = _resolve_client(client)
     offset = (page - 1) * page_size
-    response = (
-        resolved_client.table("events")
-        .select("*", count=CountMethod.exact)
-        .order("starts_at")
-        .range(offset, offset + page_size - 1)
-        .execute()
-    )
+    query = resolved_client.table("events").select("*", count=CountMethod.exact)
+    if days_back is not None:
+        threshold = _now() - timedelta(days=days_back)
+        query = query.gte("starts_at", threshold.isoformat())
+    response = query.order("starts_at").range(offset, offset + page_size - 1).execute()
     return _paginate(response, page=page, page_size=page_size, hydrate=_hydrate_event)
 
 
@@ -197,3 +197,20 @@ def publish_event_draft(
     )
 
     return updated_draft
+
+
+def delete_event(
+    actor: ProfileRecord,
+    event_id: UUID,
+    *,
+    client: Client | None = None,
+) -> None:
+    resolved_client = _resolve_client(client)
+    event = _event_by_id(resolved_client, event_id)
+    if event is None:
+        raise KeyError(f"Unknown event: {event_id}")
+
+    if actor.id != event.created_by and not actor.is_admin:
+        raise PermissionError("Only event owner or reviewer can delete event")
+
+    resolved_client.table("events").delete().eq("id", str(event_id)).execute()

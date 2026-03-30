@@ -83,6 +83,7 @@ type ApiEvent = {
   ends_at: string | null
   source_url: string | null
   origin: string
+  created_by: string
   attendance_count: number
   capacity: number | null
 }
@@ -143,6 +144,8 @@ type ApiEventDraft = {
 type ApiFlag = {
   id: string
   subject_id: string
+  subject_type: string
+  status: string
   reason: string
   severity: string
   created_at: string
@@ -342,6 +345,7 @@ function toEventItem(event: ApiEvent): EventItem & { attendanceCount: number } {
     attendees: [],
     myRsvp: RSVP_LOCAL_STATE.get(event.id) ?? 'not_going',
     capacity: event.capacity ?? 0,
+    createdBy: event.created_by,
     attendanceCount: event.attendance_count,
   }
 }
@@ -497,6 +501,11 @@ export const api = {
     }
   },
 
+  async getAdminProfiles() {
+    const page = await request<ApiPage<ApiProfile>>('/profiles?all=true&include_pending=true')
+    return page.items
+  },
+
   async getProfileById(id: string) {
     try {
       const profile = await request<ApiProfile>(`/profiles/${id}`)
@@ -531,6 +540,10 @@ export const api = {
     return refreshed.items.find((item) => item.id === eventId) ?? null
   },
 
+  async deleteEvent(eventId: string) {
+    await request(`/events/${eventId}`, { method: 'DELETE' })
+  },
+
   async getResources() {
     const [resourcesPage, submissionsPage] = await Promise.all([
       request<ApiPage<ApiResource>>('/resources'),
@@ -563,6 +576,14 @@ export const api = {
       }),
     })
     return toResourceItem(record)
+  },
+
+  async deleteResource(resourceId: string) {
+    await request(`/resources/${resourceId}`, { method: 'DELETE' })
+  },
+
+  async deleteResourceSubmission(submissionId: string) {
+    await request(`/resources/submissions/${submissionId}`, { method: 'DELETE' })
   },
 
   async getCollabProjects() {
@@ -613,6 +634,66 @@ export const api = {
     await request(`/collab/${id}/leave`, { method: 'POST' })
     const refreshed = await this.getCollabProjects()
     return refreshed.items.find((item) => item.id === id) ?? null
+  },
+
+  async removeCollab(id: string) {
+    await request(`/collab/${id}`, { method: 'DELETE' })
+  },
+
+  async getPendingApprovals() {
+    const page = await request<ApiPage<ApiApproval>>('/admin/approvals')
+    return page.items
+  },
+
+  async getPendingResourceSubmissions() {
+    const page = await request<ApiPage<ApiResourceSubmission>>('/admin/resources/submissions')
+    return page.items
+  },
+
+  async getPendingEventDrafts() {
+    const page = await request<ApiPage<ApiEventDraft>>('/admin/event-drafts')
+    return page.items
+  },
+
+  async getOpenFlags() {
+    const page = await request<ApiPage<ApiFlag>>('/admin/flags')
+    return page.items
+  },
+
+  async approveUserApplication(id: string) {
+    await request(`/admin/approvals/${id}/approve`, { method: 'POST' })
+  },
+
+  async rejectUserApplication(id: string) {
+    await request(`/admin/approvals/${id}/reject`, { method: 'POST' })
+  },
+
+  async approveResourceSubmission(id: string) {
+    await request(`/admin/resources/submissions/${id}/approve`, { method: 'POST' })
+  },
+
+  async rejectResourceSubmission(id: string) {
+    await request(`/admin/resources/submissions/${id}/reject`, { method: 'POST' })
+  },
+
+  async publishEventDraft(id: string) {
+    await request(`/admin/event-drafts/${id}/publish`, { method: 'POST' })
+  },
+
+  async rejectEventDraft(id: string) {
+    await request(`/admin/event-drafts/${id}/reject`, { method: 'POST' })
+  },
+
+  async dismissFlag(id: string) {
+    await request(`/admin/flags/${id}/dismiss`, { method: 'POST' })
+  },
+
+  async banUser(userId: string) {
+    await request(`/admin/users/${userId}/ban`, { method: 'POST' })
+  },
+
+  async unbanUser(userId: string) {
+    await request(`/admin/users/${userId}/unban`, { method: 'POST' })
   },
 
   async getAdminQueue() {

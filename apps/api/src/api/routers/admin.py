@@ -144,6 +144,15 @@ def list_flags(
     return store.list_flags(page=page, page_size=page_size)
 
 
+@router.post("/flags/{flag_id}/dismiss", response_model=FlagRecord)
+def dismiss_flag(
+    flag_id: UUID,
+    actor: ProfileRecord = Depends(require_reviewer),
+    store: StoreProtocol = Depends(get_store),
+) -> FlagRecord:
+    return store.resolve_flag(actor, flag_id, action=ModerationAction.dismiss_flag)
+
+
 @router.post("/users/{user_id}/ban", response_model=dict[str, str])
 def ban_user(
     user_id: UUID,
