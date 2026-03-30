@@ -59,6 +59,7 @@ def _build_profile_upsert_row(
 
     return {
         "id": str(payload.user_id),
+        "username": payload.username,
         "email": payload.email,
         "google_subject": payload.google_subject,
         "role": str(existing_profile.role if existing_profile is not None else Role.member),
@@ -70,9 +71,9 @@ def _build_profile_upsert_row(
         "linkedin_url": str(payload.linkedin_url),
         "github_url": str(payload.github_url) if payload.github_url is not None else None,
         "portfolio_url": str(payload.portfolio_url) if payload.portfolio_url is not None else None,
-        "skills": list(payload.skills),
-        "hobbies": list(payload.hobbies),
-        "status_badges": list(existing_profile.status_badges) if existing_profile is not None else [],
+        "skills": list(payload.skills or []),
+        "hobbies": list(payload.hobbies or []),
+        "status_badges": list(existing_profile.status_badges or []) if existing_profile is not None else [],
         "open_to_collab": payload.open_to_collab,
         "job_seeking": payload.job_seeking,
         "manual_verification_notes": payload.manual_verification_notes,

@@ -45,6 +45,7 @@ _APPROVED_MEMBER_SUBJECT = "google-subject-member-001"
 
 _BASE_ONBOARDING_PAYLOAD: dict = {
     "user_id": str(_NEW_USER_ID),
+    "username": "zawlin",
     "email": _NEW_USER_EMAIL,
     "google_subject": _NEW_USER_SUBJECT,
     "name": "Zaw Lin",
@@ -192,6 +193,22 @@ class TestSubmitOnboarding:
         body = response.json()
         assert "github.com/zawlin" in body["github_url"]
         assert "zawlin.dev" in body["portfolio_url"]
+
+    def test_minimal_signup_payload_accepts_missing_optional_lists(self, client_for_new_user: TestClient) -> None:
+        """skills/hobbies are optional and may be omitted during initial signup."""
+        payload = {
+            "user_id": str(_NEW_USER_ID),
+            "username": "zawlin",
+            "email": _NEW_USER_EMAIL,
+            "google_subject": _NEW_USER_SUBJECT,
+            "linkedin_url": "https://www.linkedin.com/in/zaw-lin",
+        }
+        response = client_for_new_user.post("/me/onboarding", json=payload)
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["username"] == "zawlin"
+        assert body["skills"] == []
+        assert body["hobbies"] == []
 
 
 # ---------------------------------------------------------------------------

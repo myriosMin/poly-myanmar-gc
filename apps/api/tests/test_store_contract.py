@@ -113,6 +113,7 @@ class TestProfiles:
     def test_upsert_onboarding_creates_profile(self, store: StoreProtocol) -> None:
         payload = OnboardingSubmitRequest(
             user_id=uuid4(),
+            username="new-user",
             email="new@example.com",
             google_subject="google-new",
             name="New User",

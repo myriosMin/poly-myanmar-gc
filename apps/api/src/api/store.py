@@ -72,6 +72,7 @@ class InMemoryStore:
     def _seed(self) -> None:
         approved_member = ProfileRecord(
             id=UUID("11111111-1111-1111-1111-111111111111"),
+            username="lin.hay",
             email="lin.hay@example.com",
             google_subject="google-subject-member-001",
             role=Role.member,
@@ -91,6 +92,7 @@ class InMemoryStore:
         )
         pending_member = ProfileRecord(
             id=UUID("22222222-2222-2222-2222-222222222222"),
+            username="aung.ko",
             email="aung.ko@example.com",
             google_subject="google-subject-member-002",
             role=Role.member,
@@ -107,6 +109,7 @@ class InMemoryStore:
         )
         reviewer = ProfileRecord(
             id=UUID("33333333-3333-3333-3333-333333333333"),
+            username="reviewer.one",
             email="reviewer@example.com",
             google_subject="google-subject-reviewer",
             role=Role.reviewer,
@@ -121,6 +124,7 @@ class InMemoryStore:
         )
         superadmin = ProfileRecord(
             id=UUID("44444444-4444-4444-4444-444444444444"),
+            username="super.admin",
             email="admin@example.com",
             google_subject="google-subject-superadmin",
             role=Role.superadmin,
@@ -300,6 +304,7 @@ class InMemoryStore:
             if profile is None:
                 profile = ProfileRecord(
                     id=payload.user_id,
+                    username=payload.username,
                     email=payload.email,
                     google_subject=payload.google_subject,
                     role=Role.member,
@@ -311,8 +316,8 @@ class InMemoryStore:
                     linkedin_url=payload.linkedin_url,
                     github_url=payload.github_url,
                     portfolio_url=payload.portfolio_url,
-                    skills=list(payload.skills),
-                    hobbies=list(payload.hobbies),
+                    skills=list(payload.skills or []),
+                    hobbies=list(payload.hobbies or []),
                     status_badges=[],
                     open_to_collab=payload.open_to_collab,
                     job_seeking=payload.job_seeking,
@@ -320,6 +325,7 @@ class InMemoryStore:
                     manual_proof_url=payload.manual_proof_url,
                 )
             else:
+                profile.username = payload.username
                 profile.email = payload.email
                 profile.google_subject = payload.google_subject
                 profile.name = payload.name
@@ -329,8 +335,8 @@ class InMemoryStore:
                 profile.linkedin_url = payload.linkedin_url
                 profile.github_url = payload.github_url
                 profile.portfolio_url = payload.portfolio_url
-                profile.skills = list(payload.skills)
-                profile.hobbies = list(payload.hobbies)
+                profile.skills = list(payload.skills or [])
+                profile.hobbies = list(payload.hobbies or [])
                 profile.open_to_collab = payload.open_to_collab
                 profile.job_seeking = payload.job_seeking
                 profile.manual_verification_notes = payload.manual_verification_notes

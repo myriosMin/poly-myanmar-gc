@@ -25,6 +25,7 @@ def _upsert_onboarding_supabase(payload: OnboardingSubmitRequest) -> ProfileReco
 
     profile_data = {
         "id": str(payload.user_id),
+        "username": payload.username,
         "email": payload.email,
         "google_subject": payload.google_subject,
         "role": "member",
@@ -36,8 +37,8 @@ def _upsert_onboarding_supabase(payload: OnboardingSubmitRequest) -> ProfileReco
         "linkedin_url": str(payload.linkedin_url),
         "github_url": str(payload.github_url) if payload.github_url else None,
         "portfolio_url": str(payload.portfolio_url) if payload.portfolio_url else None,
-        "skills": list(payload.skills),
-        "hobbies": list(payload.hobbies),
+        "skills": payload.skills,
+        "hobbies": payload.hobbies,
         "status_badges": [],
         "open_to_collab": payload.open_to_collab,
         "job_seeking": payload.job_seeking,
