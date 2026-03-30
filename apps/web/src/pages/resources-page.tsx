@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
 import type { ResourceSubmissionInput } from '@/lib/domain'
 import { resourceCategories } from '@/lib/domain'
+import { useSessionQuery } from '@/lib/query'
 import { resourceSubmissionSchema, type ResourceSubmissionForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 
@@ -91,6 +92,8 @@ function ResourceModal({
 
 export function ResourcesPage() {
   const queryClient = useQueryClient()
+  const { data: session } = useSessionQuery()
+  const isReviewer = session?.role === 'reviewer' || session?.role === 'superadmin'
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [categoryFilter, setCategoryFilter] = useState('')
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
@@ -101,6 +104,12 @@ export function ResourcesPage() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+  })
+
+  const reviewerSubmissionsQuery = useQuery({
+    queryKey: ['reviewer-resource-submissions'],
+    queryFn: () => api.getPendingResourceSubmissions(),
+    enabled: isReviewer,
   })
 
   const refreshResources = async () => {
@@ -124,6 +133,31 @@ export function ResourcesPage() {
       form.reset()
       setShowCreateModal(false)
       await queryClient.invalidateQueries({ queryKey: ['resources'] })
+    },
+  })
+
+  const reviewSubmissionMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'approve' | 'reject' }) =>
+      action === 'approve' ? api.approveResourceSubmission(id) : api.rejectResourceSubmission(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['resources'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-resource-submissions'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
+    },
+  })
+
+  const deleteResourceMutation = useMutation({
+    mutationFn: (id: string) => api.deleteResource(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['resources'] })
+    },
+  })
+
+  const deleteSubmissionMutation = useMutation({
+    mutationFn: (id: string) => api.deleteResourceSubmission(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['resources'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-resource-submissions'] })
     },
   })
 
@@ -259,6 +293,79 @@ export function ResourcesPage() {
         <aside className="hidden lg:block">{sidebar}</aside>
 
         <div className="space-y-4">
+          {isReviewer ? (
+            <div className="content-row bg-card/84">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="section-kicker">Reviewer controls</p>
+                  <p className="section-title mt-2">Pending resource submissions</p>
+                </div>
+                <Badge variant="outline">{reviewerSubmissionsQuery.data?.length ?? 0}</Badge>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {(reviewerSubmissionsQuery.data ?? []).length ? (
+                  reviewerSubmissionsQuery.data?.map((submission) => (
+                    <div key={submission.id} className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-foreground">{submission.title}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{submission.description || 'No description'}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => reviewSubmissionMutation.mutate({ id: submission.id, action: 'approve' })}
+                            disabled={reviewSubmissionMutation.isPending}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => reviewSubmissionMutation.mutate({ id: submission.id, action: 'reject' })}
+                            disabled={reviewSubmissionMutation.isPending}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No pending submissions right now.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {resourcesQuery.data?.submissions.length ? (
+            <div className="content-row bg-card/80">
+              <p className="section-kicker">Your submissions</p>
+              <p className="section-title mt-2">Pending and recent resource submissions</p>
+              <div className="mt-4 space-y-3">
+                {resourcesQuery.data.submissions.map((submission) => (
+                  <div key={submission.id} className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-foreground">{submission.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">Status: {submission.status}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteSubmissionMutation.mutate(submission.id)}
+                        disabled={deleteSubmissionMutation.isPending}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {filteredResources.length ? (
             filteredResources.map((resource) => (
               <div key={resource.id} className="content-row">
@@ -283,12 +390,23 @@ export function ResourcesPage() {
                     Shared by {resource.submittedBy} •{' '}
                     {new Date(resource.createdAt).toLocaleDateString()}
                   </p>
-                  <Button asChild variant="outline">
-                    <a href={resource.url} target="_blank" rel="noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                      Open
-                    </a>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    {(session?.id === resource.submittedBy || isReviewer) ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => deleteResourceMutation.mutate(resource.id)}
+                        disabled={deleteResourceMutation.isPending}
+                      >
+                        Delete
+                      </Button>
+                    ) : null}
+                    <Button asChild variant="outline">
+                      <a href={resource.url} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                        Open
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))

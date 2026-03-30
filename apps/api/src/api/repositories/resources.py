@@ -64,6 +64,7 @@ def list_resource_submissions(
     page: int = 1,
     page_size: int = 20,
     status: ApprovalState | None = None,
+    submitted_by: UUID | None = None,
     client: Client | None = None,
 ) -> Page[ResourceSubmissionRecord]:
     resolved_client = _resolve_client(client)
@@ -75,6 +76,8 @@ def list_resource_submissions(
     )
     if status is not None:
         query = query.eq("status", str(status))
+    if submitted_by is not None:
+        query = query.eq("submitted_by", str(submitted_by))
     response = query.range(offset, offset + page_size - 1).execute()
     return _paginate(response, page=page, page_size=page_size, hydrate=_hydrate_submission)
 
@@ -170,3 +173,37 @@ def publish_resource(
     )
 
     return updated_submission
+
+
+def delete_resource(
+    actor: ProfileRecord,
+    resource_id: UUID,
+    *,
+    client: Client | None = None,
+) -> None:
+    resolved_client = _resolve_client(client)
+    resource = _resource_by_id(resolved_client, resource_id)
+    if resource is None:
+        raise KeyError(f"Unknown resource: {resource_id}")
+
+    if actor.id != resource.submitted_by and not actor.is_admin:
+        raise PermissionError("Only resource owner or reviewer can delete resource")
+
+    resolved_client.table("resources").delete().eq("id", str(resource_id)).execute()
+
+
+def delete_resource_submission(
+    actor: ProfileRecord,
+    submission_id: UUID,
+    *,
+    client: Client | None = None,
+) -> None:
+    resolved_client = _resolve_client(client)
+    submission = _submission_by_id(resolved_client, submission_id)
+    if submission is None:
+        raise KeyError(f"Unknown resource submission: {submission_id}")
+
+    if actor.id != submission.submitted_by and not actor.is_admin:
+        raise PermissionError("Only submission owner or reviewer can delete submission")
+
+    resolved_client.table("resource_submissions").delete().eq("id", str(submission_id)).execute()

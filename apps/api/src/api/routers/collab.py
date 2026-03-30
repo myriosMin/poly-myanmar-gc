@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from ..deps import get_actor, get_store, require_approved_member
+from ..deps import get_store, require_approved_member
 from ..models import CollabCreateRequest, CollabMembershipRecord, CollabProjectRecord, Page, ProfileRecord
 from ..store_protocol import StoreProtocol
 
@@ -47,3 +47,13 @@ def leave_collab(
 ) -> dict[str, str]:
     store.leave_collab(actor, collab_id)
     return {"status": "left", "collab_id": str(collab_id)}
+
+
+@router.delete("/{collab_id}")
+def remove_collab(
+    collab_id: UUID,
+    actor: ProfileRecord = Depends(require_approved_member),
+    store: StoreProtocol = Depends(get_store),
+) -> dict[str, str]:
+    store.remove_collab(actor, collab_id)
+    return {"status": "removed", "collab_id": str(collab_id)}

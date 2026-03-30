@@ -61,7 +61,7 @@ def get_directory(
 
 @router.get("", response_model=Page[ProfileRecord])
 def list_profiles(
-    _: ProfileRecord = Depends(require_approved_member),
+    actor: ProfileRecord = Depends(require_approved_member),
     store: StoreProtocol = Depends(get_store),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
@@ -74,6 +74,7 @@ def list_profiles(
     open_to_collab: bool | None = Query(default=None),
     job_seeking: bool | None = Query(default=None),
     all: bool = Query(default=False),
+    include_pending: bool = Query(default=False),
 ) -> Page[ProfileRecord]:
     # If 'all' is True, fetch all profiles without filters
     if all:
@@ -99,6 +100,7 @@ def list_profiles(
         job_seeking=job_seeking,
         page=page,
         page_size=page_size,
+        include_pending=include_pending and actor.is_admin,
     )
 
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowUpRight,
   BriefcaseBusiness,
@@ -20,6 +20,7 @@ import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
 import { type ProfileFilters } from '@/lib/domain'
+import { useSessionQuery } from '@/lib/query'
 import { formatDate } from '@/lib/utils'
 
 const defaultFilters: ProfileFilters = {
@@ -234,6 +235,9 @@ function ProfileOverlay({
 
 export function ProfilesPage() {
   const { theme } = useTheme()
+  const { data: session } = useSessionQuery()
+  const isReviewer = session?.role === 'reviewer' || session?.role === 'superadmin'
+  const isSuperadmin = session?.role === 'superadmin'
   const [filters, setFilters] = useState<ProfileFilters>(defaultFilters)
   const [searchDraft, setSearchDraft] = useState('')
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null)
@@ -283,6 +287,49 @@ export function ProfilesPage() {
     queryKey: ['profiles-directory'],
     queryFn: () => api.getDirectory(),
     staleTime: 5 * 60 * 1000, // 5 minutes - aggressive caching for client-side filtering
+  })
+
+  const reviewerApprovalsQuery = useQuery({
+    queryKey: ['reviewer-approvals'],
+    queryFn: () => api.getPendingApprovals(),
+    enabled: isReviewer,
+  })
+
+  const adminProfilesQuery = useQuery({
+    queryKey: ['admin-profiles'],
+    queryFn: () => api.getAdminProfiles(),
+    enabled: isSuperadmin,
+  })
+
+  const reviewApprovalMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'approve' | 'reject' }) =>
+      action === 'approve' ? api.approveUserApplication(id) : api.rejectUserApplication(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-approvals'] })
+      await queryClient.invalidateQueries({ queryKey: ['profiles-directory'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-profiles'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
+    },
+  })
+
+  const banMutation = useMutation({
+    mutationFn: (userId: string) => api.banUser(userId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['profiles-directory'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-profiles'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-approvals'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
+    },
+  })
+
+  const unbanMutation = useMutation({
+    mutationFn: (userId: string) => api.unbanUser(userId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['profiles-directory'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-profiles'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-approvals'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
+    },
   })
 
   // Apply filters client-side to the cached data
@@ -598,20 +645,85 @@ export function ProfilesPage() {
         </div>
 
         <div className="space-y-4">
+          {isReviewer ? (
+            <div className="content-row bg-card/84">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="section-kicker">Reviewer controls</p>
+                  <p className="section-title mt-2">Pending user applications</p>
+                </div>
+                <Badge variant="outline">{reviewerApprovalsQuery.data?.length ?? 0}</Badge>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {(reviewerApprovalsQuery.data ?? []).length ? (
+                  reviewerApprovalsQuery.data?.map((approval) => (
+                    <div key={approval.id} className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-foreground">{String(approval.submitted_payload.username ?? approval.user_id)}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{String(approval.submitted_payload.email ?? 'No email')}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => reviewApprovalMutation.mutate({ id: approval.id, action: 'approve' })}
+                            disabled={reviewApprovalMutation.isPending}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => reviewApprovalMutation.mutate({ id: approval.id, action: 'reject' })}
+                            disabled={reviewApprovalMutation.isPending}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No pending applications right now.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {isSuperadmin ? (
+            <div className="content-row bg-card/84">
+              <p className="section-kicker">Superadmin controls</p>
+              <p className="section-title mt-2">Banned users</p>
+              <div className="mt-4 space-y-3">
+                {(adminProfilesQuery.data ?? [])
+                  .filter((profile) => profile.approval_status === 'banned')
+                  .map((profile) => (
+                    <div key={profile.id} className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-foreground">{profile.username}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => unbanMutation.mutate(profile.id)}
+                          disabled={unbanMutation.isPending}
+                        >
+                          Unban
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ) : null}
+
           {filteredProfilesData?.items.length ? (
             <section className="grid gap-4 xl:grid-cols-2">
               {filteredProfilesData.items.map((profile) => (
                 <div
                   key={profile.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedProfileId(profile.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setSelectedProfileId(profile.id)
-                    }
-                  }}
                   className="text-left focus:outline-hidden"
                 >
                   <div className="surface-panel card-float h-full rounded-[2rem] px-5 py-5 md:px-6 md:py-6">
@@ -649,21 +761,44 @@ export function ProfilesPage() {
                           <BriefcaseBusiness className="h-4 w-4 text-primary" />
                           {profile.jobSeeking ? 'OPEN TO WORK' : 'SETTLED'}
                         </div>
-                        <Button
-                          asChild
-                          variant="ghost"
-                          size="sm"
-                          className="px-0 text-sm text-foreground hover:bg-transparent"
-                        >
-                          <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
-                            <img
-                              src={theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png'}
-                              alt="LinkedIn"
-                              className="h-4 w-4"
-                            />
-                            LinkedIn
-                          </a>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedProfileId(profile.id)}
+                          >
+                            View
+                          </Button>
+                          {isSuperadmin ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(event) => {
+                                event.preventDefault()
+                                event.stopPropagation()
+                                banMutation.mutate(profile.id)
+                              }}
+                              disabled={banMutation.isPending}
+                            >
+                              Ban
+                            </Button>
+                          ) : null}
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="px-0 text-sm text-foreground hover:bg-transparent"
+                          >
+                            <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">
+                              <img
+                                src={theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png'}
+                                alt="LinkedIn"
+                                className="h-4 w-4"
+                              />
+                              LinkedIn
+                            </a>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>

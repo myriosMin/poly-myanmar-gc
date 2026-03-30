@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
 import type { CollabCreateInput } from '@/lib/domain'
 import { collabTypes } from '@/lib/domain'
+import { useSessionQuery } from '@/lib/query'
 import { collabCreateSchema, type CollabCreateForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 
@@ -89,6 +90,8 @@ function CollabModal({
 
 export function CollabPage() {
   const queryClient = useQueryClient()
+  const { data: session } = useSessionQuery()
+  const isReviewer = session?.role === 'reviewer' || session?.role === 'superadmin'
   const [typeFilter, setTypeFilter] = useState('')
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -98,6 +101,12 @@ export function CollabPage() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
+  })
+
+  const flagsQuery = useQuery({
+    queryKey: ['reviewer-collab-flags'],
+    queryFn: () => api.getOpenFlags(),
+    enabled: isReviewer,
   })
 
   const refreshCollab = async () => {
@@ -138,6 +147,31 @@ export function CollabPage() {
     mutationFn: api.leaveCollab,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['collab'] })
+    },
+  })
+
+  const removeCollabMutation = useMutation({
+    mutationFn: (id: string) => api.removeCollab(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['collab'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-collab-flags'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
+    },
+  })
+
+  const reviewFlagMutation = useMutation({
+    mutationFn: async ({ flagId, collabId, action }: { flagId: string; collabId: string; action: 'approve' | 'reject' }) => {
+      if (action === 'approve') {
+        await api.dismissFlag(flagId)
+        return
+      }
+      await api.removeCollab(collabId)
+      await api.dismissFlag(flagId)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['collab'] })
+      await queryClient.invalidateQueries({ queryKey: ['reviewer-collab-flags'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
     },
   })
 
@@ -271,6 +305,50 @@ export function CollabPage() {
         <aside className="hidden lg:block">{sidebar}</aside>
 
         <div className="space-y-4">
+          {isReviewer ? (
+            <div className="content-row bg-card/84">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="section-kicker">Reviewer controls</p>
+                  <p className="section-title mt-2">Collab flags</p>
+                </div>
+                <Badge variant="outline">{flagsQuery.data?.filter((flag) => flag.subject_type === 'collab_flag').length ?? 0}</Badge>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {(flagsQuery.data ?? [])
+                  .filter((flag) => flag.subject_type === 'collab_flag' && flag.status === 'open')
+                  .map((flag) => (
+                    <div key={flag.id} className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-foreground">Flagged collab {flag.subject_id}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{flag.reason}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => reviewFlagMutation.mutate({ flagId: flag.id, collabId: flag.subject_id, action: 'approve' })}
+                            disabled={reviewFlagMutation.isPending}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => reviewFlagMutation.mutate({ flagId: flag.id, collabId: flag.subject_id, action: 'reject' })}
+                            disabled={reviewFlagMutation.isPending}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ) : null}
+
           {filteredProjects.length ? (
             filteredProjects.map((project) => (
               <div key={project.id} className="content-row">
@@ -314,6 +392,16 @@ export function CollabPage() {
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-2">
+                  {(session?.id === project.createdBy || isReviewer) ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => removeCollabMutation.mutate(project.id)}
+                      disabled={removeCollabMutation.isPending}
+                    >
+                      Remove
+                    </Button>
+                  ) : null}
                   <Button
                     size="sm"
                     onClick={() => joinMutation.mutate(project.id)}

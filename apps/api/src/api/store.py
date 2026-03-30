@@ -411,8 +411,17 @@ class InMemoryStore:
         page_items, total = _paginate(profiles, page, page_size)
         return Page[ProfileRecord](items=page_items, page=page, page_size=page_size, total=total)
 
-    def list_events(self, *, page: int = 1, page_size: int = 20) -> Page[EventRecord]:
+    def list_events(
+        self,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+        days_back: int | None = None,
+    ) -> Page[EventRecord]:
         events = sorted(self.events.values(), key=lambda event: event.starts_at)
+        if days_back is not None:
+            threshold = _now() - timedelta(days=days_back)
+            events = [event for event in events if event.starts_at >= threshold]
         page_items, total = _paginate(events, page, page_size)
         return Page[EventRecord](items=page_items, page=page, page_size=page_size, total=total)
 
@@ -444,10 +453,13 @@ class InMemoryStore:
         page: int = 1,
         page_size: int = 20,
         status: ApprovalState | None = None,
+        submitted_by: UUID | None = None,
     ) -> Page[ResourceSubmissionRecord]:
         submissions = sorted(self.resource_submissions.values(), key=lambda submission: submission.created_at, reverse=True)
         if status is not None:
             submissions = [submission for submission in submissions if submission.status == status]
+        if submitted_by is not None:
+            submissions = [submission for submission in submissions if submission.submitted_by == submitted_by]
         page_items, total = _paginate(submissions, page, page_size)
         return Page[ResourceSubmissionRecord](items=page_items, page=page, page_size=page_size, total=total)
 
@@ -510,6 +522,24 @@ class InMemoryStore:
                     reason=reason,
                 )
             return submission
+
+    def delete_resource(self, actor: ProfileRecord, resource_id: UUID) -> None:
+        with self._lock:
+            resource = self.resources.get(resource_id)
+            if resource is None:
+                raise KeyError(f"Unknown resource: {resource_id}")
+            if actor.id != resource.submitted_by and not actor.is_admin:
+                raise PermissionError("Only resource owner or reviewer can delete resource")
+            self.resources.pop(resource_id, None)
+
+    def delete_resource_submission(self, actor: ProfileRecord, submission_id: UUID) -> None:
+        with self._lock:
+            submission = self.resource_submissions.get(submission_id)
+            if submission is None:
+                raise KeyError(f"Unknown resource submission: {submission_id}")
+            if actor.id != submission.submitted_by and not actor.is_admin:
+                raise PermissionError("Only submission owner or reviewer can delete submission")
+            self.resource_submissions.pop(submission_id, None)
 
     def list_collabs(self, *, page: int = 1, page_size: int = 20) -> Page[CollabProjectRecord]:
         collabs = [collab for collab in self.collab_projects.values() if collab.status == CollabStatus.active]
@@ -653,6 +683,17 @@ class InMemoryStore:
                 )
             return draft
 
+    def delete_event(self, actor: ProfileRecord, event_id: UUID) -> None:
+        with self._lock:
+            event = self.events.get(event_id)
+            if event is None:
+                raise KeyError(f"Unknown event: {event_id}")
+            if actor.id != event.created_by and not actor.is_admin:
+                raise PermissionError("Only event owner or reviewer can delete event")
+            self.events.pop(event_id, None)
+            for key in [key for key in self.event_rsvps if key[0] == event_id]:
+                self.event_rsvps.pop(key, None)
+
     def list_flags(self, *, page: int = 1, page_size: int = 20, status: FlagStatus | None = None) -> Page[FlagRecord]:
         flags = sorted(self.flags.values(), key=lambda flag: flag.created_at, reverse=True)
         if status is not None:
@@ -724,11 +765,13 @@ class InMemoryStore:
             )
             return profile
 
-    def delete_collab(self, actor: ProfileRecord, collab_id: UUID) -> None:
+    def remove_collab(self, actor: ProfileRecord, collab_id: UUID) -> None:
         with self._lock:
             collab = self.collab_projects.get(collab_id)
             if collab is None:
                 raise KeyError(f"Unknown collab: {collab_id}")
+            if actor.id != collab.created_by and not actor.is_admin:
+                raise PermissionError("Only collab owner or reviewer can remove collab")
             collab.status = CollabStatus.removed
             collab.updated_at = _now()
             self._log_action(
@@ -738,6 +781,9 @@ class InMemoryStore:
                 ModerationAction.remove,
                 reason="collab removed by admin",
             )
+
+    def delete_collab(self, actor: ProfileRecord, collab_id: UUID) -> None:
+        self.remove_collab(actor, collab_id)
 
     def create_telegram_token(
         self,
