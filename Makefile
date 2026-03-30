@@ -46,10 +46,13 @@ ADMIN_ACTOR_ID ?= 33333333-3333-3333-3333-333333333333
 test-api:
 	PYTHONPATH=apps/api/src uv run --directory apps/api python -c "from fastapi.testclient import TestClient; from api.main import app; client = TestClient(app); paths = ['/healthz', '/me', '/profiles', '/events', '/resources', '/collab']; [print(path, client.get(path).status_code) for path in paths]; response = client.get('/admin/queue', headers={'X-Actor-Id': '$(ADMIN_ACTOR_ID)'}); print('/admin/queue', response.status_code)"
 
+pytest-api:
+	uv run --directory apps/api --extra dev pytest -v
+
 test-worker:
 	PYTHONPATH=apps/worker/src uv run --directory apps/worker python -c "from worker.jobs import WorkerEngine; from worker.settings import load_settings; engine = WorkerEngine(load_settings()); report = engine.run_once(); print('drafts', len(report.generated_drafts)); print('flags', len(report.suspicious_flags)); print('notifications', report.notifications_sent)"
 
-test: lint-web build-web test-api test-worker
+test: lint-web build-web test-api pytest-api test-worker
 
 smoke: test
 

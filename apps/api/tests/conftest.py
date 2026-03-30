@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 from uuid import UUID
 
-from api.store import InMemoryStore, create_store
-from api.store_protocol import StoreProtocol
-from api.models import ProfileRecord
+# Load .env BEFORE any api imports — api/__init__.py triggers app creation
+# which reads settings and may attempt a Supabase connection.
+load_dotenv(Path(__file__).resolve().parents[3] / ".env", override=True)
+
+from api.store import InMemoryStore, create_store  # noqa: E402
+from api.store_protocol import StoreProtocol  # noqa: E402
+from api.models import ProfileRecord  # noqa: E402
 
 # Well-known seeded UUIDs (from InMemoryStore._seed)
 APPROVED_MEMBER_ID = UUID("11111111-1111-1111-1111-111111111111")
