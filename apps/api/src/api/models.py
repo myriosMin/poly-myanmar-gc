@@ -131,6 +131,20 @@ class ProfileRecord(BaseModel):
         return self.role == Role.superadmin
 
 
+class ProfileRecordLite(BaseModel):
+    """Lightweight profile for directory listing - card fields only"""
+    id: UUID
+    username: str
+    polytechnic: str | None = None
+    course: str | None = None
+    graduation_year: int | None = None
+    status_badges: list[str] | None = None
+    open_to_collab: bool | None = None
+    job_seeking: bool | None = None
+    created_at: datetime
+    name: str | None = None  # Fallback for display
+
+
 class OnboardingSubmitRequest(BaseModel):
     user_id: UUID
     username: str
