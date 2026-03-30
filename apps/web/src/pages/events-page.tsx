@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Filter, MapPin, Users, X } from 'lucide-react'
+import { CalendarDays, Filter, MapPin, RefreshCw, Users, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/layout/empty-state'
@@ -17,7 +17,14 @@ export function EventsPage() {
   const eventsQuery = useQuery({
     queryKey: ['events'],
     queryFn: () => api.getEvents(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
+
+  const refreshEvents = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['events'] })
+  }
 
   const rsvpMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'going' | 'interested' | 'not_going' }) =>
@@ -132,6 +139,17 @@ export function EventsPage() {
             >
               <Filter className="h-3.5 w-3.5" />
               Filters
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-11 w-11"
+              onClick={() => void refreshEvents()}
+              disabled={eventsQuery.isFetching}
+              title="Refresh events"
+            >
+              <RefreshCw className={cn('h-4 w-4', eventsQuery.isFetching && 'animate-spin')} />
             </Button>
           </>
         }

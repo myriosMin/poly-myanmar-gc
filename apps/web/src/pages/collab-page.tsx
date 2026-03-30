@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Filter, Link2, Plus, Users, X } from 'lucide-react'
+import { Filter, Link2, Plus, RefreshCw, Users, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,7 +95,14 @@ export function CollabPage() {
   const collabQuery = useQuery({
     queryKey: ['collab'],
     queryFn: () => api.getCollabProjects(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
+
+  const refreshCollab = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['collab'] })
+  }
 
   const form = useForm<CollabCreateForm>({
     resolver: zodResolver(collabCreateSchema),
@@ -240,6 +247,17 @@ export function CollabPage() {
             <Button type="button" variant="outline" className="h-11 px-4 lg:hidden" onClick={() => setShowMobileSidebar(true)}>
               <Filter className="h-3.5 w-3.5" />
               Filters
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-11 w-11"
+              onClick={() => void refreshCollab()}
+              disabled={collabQuery.isFetching}
+              title="Refresh collaborations"
+            >
+              <RefreshCw className={cn('h-4 w-4', collabQuery.isFetching && 'animate-spin')} />
             </Button>
             <Button type="button" className="h-11 px-4" onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4" />
