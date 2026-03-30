@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   Filter,
   Globe,
+  RefreshCw,
   Search,
   UsersRound,
   X,
@@ -13,13 +14,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { useTheme } from '@/app/theme'
 import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
-import { studentStatuses, type ProfileFilters } from '@/lib/domain'
+import { type ProfileFilters } from '@/lib/domain'
 import { formatDate } from '@/lib/utils'
 
 const defaultFilters: ProfileFilters = {
@@ -280,12 +280,86 @@ export function ProfilesPage() {
   }, [isResizing])
 
   const profilesQuery = useQuery({
-    queryKey: ['profiles', filters],
-    queryFn: () => api.getProfiles(filters),
+    queryKey: ['profiles-directory'],
+    queryFn: () => api.getDirectory(),
+    staleTime: 5 * 60 * 1000, // 5 minutes - aggressive caching for client-side filtering
   })
 
+  // Apply filters client-side to the cached data
+  const filteredProfilesData = useMemo(() => {
+    if (!profilesQuery.data) return null
+
+    const allProfiles = profilesQuery.data.items
+
+    // Apply client-side filtering
+    const filtered = allProfiles.filter((profile) => {
+      // Search filter
+      if (filters.search.trim()) {
+        const searchLower = filters.search.toLowerCase()
+        if (!profile.name.toLowerCase().includes(searchLower)) {
+          return false
+        }
+      }
+
+      // Polytechnic filter
+      if (filters.polytechnic && profile.polytechnic !== filters.polytechnic) {
+        return false
+      }
+
+      // Course filter
+      if (filters.course.trim() && profile.course.toLowerCase() !== filters.course.toLowerCase()) {
+        return false
+      }
+
+      // Graduation year filter
+      if (filters.graduationYear.trim() && profile.graduationYear !== parseInt(filters.graduationYear)) {
+        return false
+      }
+
+      // Status filter
+      if (filters.status && profile.statusBadge !== filters.status) {
+        return false
+      }
+
+      // Availability filters
+      if (filters.openToCollab && !profile.openToCollab) {
+        return false
+      }
+
+      if (filters.jobSeeking && !profile.jobSeeking) {
+        return false
+      }
+
+      return true
+    })
+
+    // Calculate counts from filtered results
+    const polytechnicCounts = new Map<string, number>()
+    const statusCounts = new Map<string, number>()
+
+    filtered.forEach((profile) => {
+      polytechnicCounts.set(profile.polytechnic, (polytechnicCounts.get(profile.polytechnic) ?? 0) + 1)
+      statusCounts.set(profile.statusBadge, (statusCounts.get(profile.statusBadge) ?? 0) + 1)
+    })
+
+    return {
+      items: filtered,
+      total: filtered.length,
+      counts: {
+        polytechnics: profilesQuery.data.counts.polytechnics.map((p) => ({
+          value: p.value,
+          count: polytechnicCounts.get(p.value) ?? 0,
+        })),
+        statuses: profilesQuery.data.counts.statuses.map((s) => ({
+          value: s.value,
+          count: statusCounts.get(s.value) ?? 0,
+        })),
+      },
+    }
+  }, [profilesQuery.data, filters])
+
   const selectedProfileFromList =
-    profilesQuery.data?.items.find((profile) => profile.id === selectedProfileId) ?? null
+    filteredProfilesData?.items.find((profile) => profile.id === selectedProfileId) ?? null
 
   const selectedProfileQuery = useQuery({
     queryKey: ['profile', selectedProfileId],
@@ -298,7 +372,10 @@ export function ProfilesPage() {
   const resetFilters = () => {
     setSearchDraft('')
     setFilters(defaultFilters)
-    void queryClient.invalidateQueries({ queryKey: ['profiles'] })
+  }
+
+  const refreshDirectory = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['profiles-directory'] })
   }
 
   const sidebar = (
@@ -337,9 +414,9 @@ export function ProfilesPage() {
                   />
                   All polytechnics
                 </span>
-                <span>{profilesQuery.data?.total ?? 0}</span>
+                <span>{filteredProfilesData?.total ?? 0}</span>
               </button>
-              {profilesQuery.data?.counts.polytechnics.map((item) => (
+              {filteredProfilesData?.counts.polytechnics.map((item) => (
                 <button
                   key={item.value}
                   type="button"
@@ -365,20 +442,41 @@ export function ProfilesPage() {
 
           <div className="border-b border-border/55 px-6 py-5">
             <p className="text-lg font-semibold text-foreground">Status</p>
-            <div className="mt-4">
-              <Select
-                value={filters.status}
-                onChange={(event) =>
-                  setFilters((current) => ({ ...current, status: event.target.value }))
-                }
+            <div className="mt-4 space-y-3">
+              <button
+                type="button"
+                onClick={() => setFilters((current) => ({ ...current, status: '' }))}
+                className="flex w-full items-center justify-between text-left text-sm text-muted-foreground transition hover:text-foreground"
               >
-                <option value="">Any status</option>
-                {studentStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </Select>
+                <span className="inline-flex items-center gap-3">
+                  <span
+                    className={`h-4 w-4 rounded border ${filters.status === '' ? 'border-primary bg-primary' : 'border-border bg-background'}`}
+                  />
+                  Any status
+                </span>
+                <span>{filteredProfilesData?.total ?? 0}</span>
+              </button>
+              {filteredProfilesData?.counts.statuses.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() =>
+                    setFilters((current) => ({
+                      ...current,
+                      status: current.status === item.value ? '' : item.value,
+                    }))
+                  }
+                  className="flex w-full items-center justify-between text-left text-sm text-muted-foreground transition hover:text-foreground"
+                >
+                  <span className="inline-flex items-center gap-3">
+                    <span
+                      className={`h-4 w-4 rounded border ${filters.status === item.value ? 'border-primary bg-primary' : 'border-border bg-background'}`}
+                    />
+                    {item.value}
+                  </span>
+                  <span>{item.count}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -434,9 +532,20 @@ export function ProfilesPage() {
               {filters.status ? <DiscoveryBadge label={filters.status} active /> : null}
             </div>
 
-            <Button variant="ghost" className="mt-4 w-full justify-center" onClick={resetFilters}>
-              Reset filters
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="ghost" className="flex-1 justify-center" onClick={resetFilters}>
+                Reset filters
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => void refreshDirectory()}
+                disabled={profilesQuery.isFetching}
+                title="Refresh directory cache"
+              >
+                <RefreshCw className={`h-4 w-4 ${profilesQuery.isFetching ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -454,7 +563,7 @@ export function ProfilesPage() {
             <HeaderSocialLinks />
             <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
               <UsersRound className="mr-1 h-3.5 w-3.5" />
-              {profilesQuery.data?.total ?? 0} members
+              {filteredProfilesData?.total ?? 0} members
             </Badge>
             <Button
               type="button"
@@ -489,9 +598,9 @@ export function ProfilesPage() {
         </div>
 
         <div className="space-y-4">
-          {profilesQuery.data?.items.length ? (
+          {filteredProfilesData?.items.length ? (
             <section className="grid gap-4 xl:grid-cols-2">
-              {profilesQuery.data.items.map((profile) => (
+              {filteredProfilesData.items.map((profile) => (
                 <div
                   key={profile.id}
                   role="button"

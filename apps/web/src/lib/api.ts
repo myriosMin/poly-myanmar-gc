@@ -40,6 +40,7 @@ type ApiMeResponse = {
 
 type ApiProfile = {
   id: string
+  username: string
   email: string
   google_subject: string | null
   role: Session['role']
@@ -57,6 +58,19 @@ type ApiProfile = {
   open_to_collab: boolean | null
   job_seeking: boolean | null
   created_at: string
+}
+
+type ApiProfileLite = {
+  id: string
+  username: string
+  polytechnic: string | null
+  course: string | null
+  graduation_year: number | null
+  status_badges: string[] | null
+  open_to_collab: boolean | null
+  job_seeking: boolean | null
+  created_at: string
+  name: string | null
 }
 
 type ApiEvent = {
@@ -235,7 +249,7 @@ function toSession(profile: ApiProfile): Session {
 function toDirectoryProfile(profile: ApiProfile): DirectoryProfile {
   const statusBadges = profile.status_badges ?? []
   const jobSeeking = profile.job_seeking ?? false
-  const profileName = profile.name ?? 'Member'
+  const profileName = profile.username || profile.name || 'member'
   const profileCourse = profile.course ?? 'Not provided yet'
   const profilePolytechnic = profile.polytechnic ?? 'SP'
   const statusBadge =
@@ -261,6 +275,45 @@ function toDirectoryProfile(profile: ApiProfile): DirectoryProfile {
     githubUrl: profile.github_url ?? undefined,
     linkedinUrl: profile.linkedin_url,
     gmail: profile.email,
+    statusBadge,
+    openToCollab: profile.open_to_collab ?? false,
+    attendingEvents: false,
+    jobSeeking,
+    badges: Array.from(new Set([statusBadge, ...(statusBadges as DirectoryProfile['badges'])])),
+    eventHistory: [],
+    collabHistory: [],
+  }
+}
+
+function toLiteDirectoryProfile(profile: ApiProfileLite): DirectoryProfile {
+  const statusBadges = profile.status_badges ?? []
+  const jobSeeking = profile.job_seeking ?? false
+  const profileName = profile.username || profile.name || 'member'
+  const profileCourse = profile.course ?? 'Not provided yet'
+  const profilePolytechnic = profile.polytechnic ?? 'SP'
+  const statusBadge =
+    (statusBadges.find((badge) =>
+      studentStatuses.includes(badge as (typeof studentStatuses)[number]),
+    ) as DirectoryProfile['statusBadge'] | undefined) ??
+    (jobSeeking ? 'looking for job' : 'current student')
+
+  return {
+    id: profile.id,
+    name: profileName,
+    avatarUrl: createAvatar(profileName),
+    polytechnic: (polytechnics.includes(profilePolytechnic as (typeof polytechnics)[number])
+      ? profilePolytechnic
+      : 'SP') as DirectoryProfile['polytechnic'],
+    course: profileCourse,
+    graduationYear: profile.graduation_year ?? new Date().getFullYear(),
+    joinedAt: profile.created_at,
+    bio: `${profileCourse} member in Singapore community network.`,
+    skills: [],
+    hobbies: [],
+    portfolioUrl: undefined,
+    githubUrl: undefined,
+    linkedinUrl: '',
+    gmail: '',
     statusBadge,
     openToCollab: profile.open_to_collab ?? false,
     attendingEvents: false,
@@ -396,6 +449,39 @@ export const api = {
       throw new Error('No active session')
     }
     return session
+  },
+
+  async getDirectory() {
+    /**
+     * Fetch all approved members once as lite profiles (card fields only)
+     * No filtering applied here - filtering happens entirely client-side
+     */
+    const page = await request<ApiPage<ApiProfileLite>>('/profiles/directory')
+    const allProfiles = page.items.map(toLiteDirectoryProfile)
+
+    // Calculate counts from ALL profiles for reference
+    const countedPolytechnics = new Map<string, number>()
+    const countedStatuses = new Map<string, number>()
+
+    allProfiles.forEach((profile) => {
+      countedPolytechnics.set(profile.polytechnic, (countedPolytechnics.get(profile.polytechnic) ?? 0) + 1)
+      countedStatuses.set(profile.statusBadge, (countedStatuses.get(profile.statusBadge) ?? 0) + 1)
+    })
+
+    return {
+      items: allProfiles,
+      total: allProfiles.length,
+      counts: {
+        polytechnics: polytechnics.map((value) => ({
+          value,
+          count: countedPolytechnics.get(value) ?? 0,
+        })),
+        statuses: studentStatuses.map((value) => ({
+          value,
+          count: countedStatuses.get(value) ?? 0,
+        })),
+      },
+    }
   },
 
   async getProfiles(filters: ProfileFilters) {
