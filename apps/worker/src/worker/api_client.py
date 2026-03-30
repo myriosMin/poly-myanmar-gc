@@ -40,6 +40,31 @@ class ApiClient:
         }
         self._post("/admin/flags", payload)
 
+    def list_resource_submissions(self) -> list[dict[str, object]]:
+        page = 1
+        page_size = 100
+        items: list[dict[str, object]] = []
+        while True:
+            payload = self._get_json(
+                "/admin/resources/submissions",
+                params={"page": page, "page_size": page_size},
+            )
+            if payload is None:
+                return []
+            page_items = payload.get("items", [])
+            if not isinstance(page_items, list):
+                logger.warning("Worker API returned invalid submissions payload on page %s", page)
+                return items
+            items.extend(item for item in page_items if isinstance(item, dict))
+
+            total = payload.get("total")
+            if not isinstance(total, int):
+                break
+            if page * page_size >= total:
+                break
+            page += 1
+        return items
+
     def _post(self, path: str, payload: dict[str, object]) -> None:
         try:
             response = httpx.post(
@@ -51,3 +76,21 @@ class ApiClient:
             response.raise_for_status()
         except httpx.HTTPError as exc:
             logger.warning("Worker API push failed for %s: %s", path, exc)
+
+    def _get_json(self, path: str, params: dict[str, int]) -> dict[str, object] | None:
+        try:
+            response = httpx.get(
+                f"{self.base_url}{path}",
+                headers={"X-Actor-Id": self.actor_id},
+                params=params,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if isinstance(payload, dict):
+                return payload
+            logger.warning("Worker API returned non-object JSON for %s", path)
+            return None
+        except (ValueError, httpx.HTTPError) as exc:
+            logger.warning("Worker API read failed for %s: %s", path, exc)
+            return None
