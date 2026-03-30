@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import type { Session } from '@/lib/domain'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,8 +18,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
 }
 
 export function useSessionQuery() {
-  return useQuery<Session>({
+  return useQuery<Session | null>({
     queryKey: ['session'],
-    queryFn: () => mockApi.getSession(),
+    queryFn: () => api.getSession(),
   })
 }

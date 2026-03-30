@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowUpRight,
   BriefcaseBusiness,
-  CalendarDays,
   Filter,
   Globe,
   Search,
@@ -19,7 +18,7 @@ import { useTheme } from '@/app/theme'
 import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { studentStatuses, type ProfileFilters } from '@/lib/domain'
 import { formatDate } from '@/lib/utils'
 
@@ -49,7 +48,7 @@ function ProfileOverlay({
   profile,
   onClose,
 }: {
-  profile: Awaited<ReturnType<typeof mockApi.getProfiles>>['items'][number]
+  profile: Awaited<ReturnType<typeof api.getProfiles>>['items'][number]
   onClose: () => void
 }) {
   const { theme } = useTheme()
@@ -219,65 +218,11 @@ function ProfileOverlay({
               </div>
             </section>
 
-            <section className="grid gap-4 xl:grid-cols-2">
-              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
-                <p className="section-kicker">Events</p>
-                <div className="mt-4 space-y-3">
-                  {profile.eventHistory.length ? (
-                    profile.eventHistory.map((event) => (
-                      <div
-                        key={event.id}
-                        className="rounded-[1.4rem] border border-border/60 bg-background/70 p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-medium text-foreground">{event.title}</p>
-                            <div className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground">
-                              <CalendarDays className="h-4 w-4 text-primary" />
-                              {formatDate(event.date)}
-                            </div>
-                          </div>
-                          <Badge variant={event.status === 'going' ? 'secondary' : 'outline'}>
-                            {event.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No event activity yet.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
-                <p className="section-kicker">Projects</p>
-                <div className="mt-4 space-y-3">
-                  {profile.collabHistory.length ? (
-                    profile.collabHistory.map((project) => (
-                      <div
-                        key={project.id}
-                        className="rounded-[1.4rem] border border-border/60 bg-background/70 p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-medium text-foreground">{project.title}</p>
-                            {project.deadline ? (
-                              <p className="mt-2 text-sm text-muted-foreground">
-                                Deadline {formatDate(project.deadline)}
-                              </p>
-                            ) : null}
-                          </div>
-                          <Badge variant={project.status === 'member' ? 'secondary' : 'outline'}>
-                            {project.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No project activity yet.</p>
-                  )}
-                </div>
-              </div>
+            <section className="surface-panel rounded-[2rem] p-6 md:p-7">
+              <p className="section-kicker">Activity</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Event and collaboration history is not available in the current API response.
+              </p>
             </section>
           </div>
         </div>
@@ -336,11 +281,19 @@ export function ProfilesPage() {
 
   const profilesQuery = useQuery({
     queryKey: ['profiles', filters],
-    queryFn: () => mockApi.getProfiles(filters),
+    queryFn: () => api.getProfiles(filters),
   })
 
-  const selectedProfile =
+  const selectedProfileFromList =
     profilesQuery.data?.items.find((profile) => profile.id === selectedProfileId) ?? null
+
+  const selectedProfileQuery = useQuery({
+    queryKey: ['profile', selectedProfileId],
+    queryFn: () => (selectedProfileId ? api.getProfileById(selectedProfileId) : null),
+    enabled: Boolean(selectedProfileId),
+  })
+
+  const selectedProfile = selectedProfileQuery.data ?? selectedProfileFromList
 
   const resetFilters = () => {
     setSearchDraft('')

@@ -1,185 +1,151 @@
-# Poly Myanmar GC 
+# Poly Myanmar GC
 
 Private networking platform for Myanmar polytechnic students, recent graduates, alumni, and mentors in Singapore.
 
-This repo is currently in a scaffolded MVP state. The product shape exists across the web app, API, worker, and database schema, but several parts are still mocked and need real integration work.
+## User Guide
 
-## What the platform does
+### Who this is for
 
-- Private approved-member directory
-- Events and RSVP tracking
-- Resource submission and moderation
-- Collaboration board for projects and hackathons
-- Admin review flows with Telegram as the intended moderation channel
+- Members: discover peers, RSVP to events, submit useful resources, and join collaboration boards.
+- Reviewers: process approvals and moderation queue items.
+- Superadmins: all reviewer actions plus worker-write and ban/unban capabilities.
 
-## Workspace layout
+### Typical member flow
 
-- `apps/web`: Vite + React + TypeScript frontend
-- `apps/api`: FastAPI API
-- `apps/worker`: background jobs for event sourcing and suspicious-activity checks
-- `packages/contracts`: shared frontend contract constants
-- `supabase/migrations`: SQL schema and RLS policy definitions
-- `docs`: legal pages and shared contract notes
+1. Open the web app.
+2. Submit onboarding details from the auth page.
+3. Wait in pending approval state.
+4. After approval, access private pages:
+	- Profiles
+	- Events and RSVP
+	- Resources
+	- Collaboration board
 
-## Current status
+### Typical reviewer flow
 
-### Done
+1. Open the admin page.
+2. Review queue categories:
+	- User applications
+	- Resource submissions
+	- Event drafts
+	- Flags
+3. Approve or reject items as needed.
 
-- Private member app shell and routed pages
-- Mocked auth/onboarding flow in the frontend
-- Profiles, events, resources, collab, admin, settings, and legal pages *[Only the Profiles page design is finalized, the rest UI/UX need to be improved]*
-- FastAPI route coverage for the main product domains
-- Worker skeleton for weekly event sourcing and alert-style jobs
-- Initial Supabase schema, enums, indexes, and RLS model
-- Root `Makefile` for local setup and smoke tests
+### Worker behavior
 
-### Still mocked
+- Generates event drafts on a schedule.
+- Detects suspicious domains from configured event sources.
+- Pushes drafts and flags to admin endpoints using actor header auth.
 
-- Frontend data layer in `apps/web/src/lib/mock-api.ts`
-- Frontend queries in `apps/web/src/lib/query.tsx`
-- Backend persistence in `apps/api/src/api/store.py`
-- Backend actor/auth flow via seeded actors and `X-Actor-Id`
-- Telegram webhook actions are local/store-backed, not connected to a real bot
-- Worker event sourcing uses deterministic sample logic, not live external sources
+## Current Progress
 
-### Not production-ready yet
+As of 2026-03-27, the repository is in integrated MVP state.
 
-- Real Supabase reads/writes from the API
-- Real Google OAuth and session validation
-- Frontend calling the API instead of the mock adapter
-- Real Telegram bot delivery and callback verification
-- Real event sourcing from Singapore career fair and hackathon sources
-- Deployment configuration and environment hardening
+### Completed
 
-## Local development
+- Frontend pages are wired to real API calls through a typed client in apps/web/src/lib/api.ts.
+- Session query is API-backed.
+- Onboarding submit calls backend endpoint and persists actor id for request headers.
+- Settings, profiles, events, resources, collab, and admin pages are API-backed.
+- Pending approval simulation action is gated to development mode.
+- API route for POST /me/onboarding is implemented with actor ownership validation.
+- Worker can push event drafts and flags to API admin endpoints.
+- Worker settings support API base URL and actor id env configuration.
+- Root smoke tests are passing:
+  - make test-api
+  - make test-worker
+
+### Still in-progress / not production-ready
+
+- API persistence still defaults to in-memory store in normal local flow.
+- Full Supabase-backed store integration across all domains is not complete.
+- Authentication is still dev-style actor header based; no Google OAuth/JWT session flow yet.
+- Telegram integration is not connected to a live bot workflow.
+- Worker sourcing is deterministic and does not yet fetch from real external data feeds.
+- Deployment and secret hardening still need production pass.
+
+## Local Development Setup
 
 ### Prerequisites
 
-- Node.js
+- Node.js 20+
 - npm
 - Python 3.11+
-- `uv`
+- uv
 
-### Environment
-
-Copy `.env.example` and fill in values as needed:
-
-```bash
-cp .env.example .env
-```
-
-### Setup
+### 1) Install dependencies
 
 ```bash
 make install
 ```
 
-### Run locally
+### 2) Configure environment
 
 ```bash
-make dev-web
+cp .env.example .env
+```
+
+The default local values in .env.example include:
+
+- API_BASE_URL
+- VITE_API_BASE_URL
+- WORKER_API_BASE_URL
+- WORKER_ACTOR_ID
+- DEFAULT_ACTOR_ID
+
+### 3) Run services
+
+In separate terminals:
+
+```bash
 make dev-api
+make dev-web
 make dev-worker
 ```
 
-### Smoke tests
+### 4) Run checks
 
 ```bash
+make test-api
+make test-worker
+cd apps/web && npx tsc --noEmit
+```
+
+### 5) Useful commands
+
+```bash
+make build-web
+make lint-web
 make test
 ```
 
-Useful individual targets:
+## Workspace Layout
 
-- `make build-web`
-- `make lint-web`
-- `make test-api`
-- `make test-worker`
+- apps/web: Vite + React + TypeScript frontend
+- apps/api: FastAPI API
+- apps/worker: background jobs
+- packages/contracts: shared role/status/action enums
+- supabase/migrations: SQL schema and policy changes
+- docs: legal and product docs
 
-## Contribution workflow
+## Shared Contracts
 
-1. Create a feature branch from `codex/bootstrap-poly-myanmar-gc`.
-2. Pick a single checklist item or one small related set of items.
-3. Keep changes scoped to one workstream when possible.
-4. Run the relevant local checks before opening a PR.
-5. In your PR description, say whether your change touched real integration code or only mock/demo code.
+Source of truth:
 
-Recommended workstream ownership:
+- docs/contracts.md
+- packages/contracts/src/index.ts
 
-- Frontend contributors: `apps/web`
-- Backend contributors: `apps/api`
-- Worker/automation contributors: `apps/worker`
-- Database contributors: `supabase/migrations`
-- Docs/legal contributors: `docs`
+Current values:
 
-## Current implementation checklist
+- Roles: member, reviewer, superadmin
+- Approval states: pending, needs_manual_review, approved, rejected, banned
+- Review objects: user_application, resource_submission, draft_event, collab_flag
+- Moderation actions: approve, reject, ban, remove, dismiss_flag
+- RSVP statuses: going, interested, not_going
 
-### Highest priority
+## Related Docs
 
-- [ ] Replace the frontend mock adapter with a typed API client
-- [ ] Wire FastAPI to real Supabase persistence instead of `InMemoryStore`
-- [ ] Implement real Google OAuth session handling
-- [ ] Connect approval and admin flows to real Supabase-backed data
-- [ ] Connect Telegram review actions to a real bot token and chat workflow
-
-### Frontend
-
-- [ ] Replace `apps/web/src/lib/mock-api.ts` usage with real API calls
-- [ ] Add loading, error, and empty states for all network-backed pages
-- [ ] Hook onboarding and settings forms to real backend mutations
-- [ ] Hook event RSVP actions to real backend mutations
-- [ ] Hook resource submission form to real backend mutations
-- [ ] Hook collab create/join/leave flows to real backend mutations
-- [ ] Add auth/session bootstrapping from real login state
-
-### API
-
-- [ ] Replace seeded in-memory data in `apps/api/src/api/store.py`
-- [ ] Add Supabase client integration and repository layer
-- [ ] Validate JWT/session state against Supabase auth
-- [ ] Persist approval, moderation, RSVP, resource, and collab writes to Postgres
-- [ ] Add proper error handling and validation around external integrations
-- [ ] Add test coverage beyond the current smoke checks
-
-### Worker and Telegram
-
-- [ ] Replace sample event sourcing with real source fetchers
-- [ ] Add deduplication against real draft event records
-- [ ] Send real Telegram messages for approvals, resource reviews, draft events, and flags
-- [ ] Verify Telegram callbacks securely and idempotently
-- [ ] Persist worker outputs instead of printing local reports only
-
-### Database and auth
-
-- [ ] Apply and validate the migration in a real Supabase project
-- [ ] Confirm RLS policies against actual frontend and API access patterns
-- [ ] Add follow-up migrations for any schema gaps found during integration
-- [ ] Define how manual verification proof metadata will be stored in production
-
-### Product polish
-
-- [ ] Tighten copy and UX for onboarding, pending approval, and admin review states
-- [ ] Add real legal page links into live app flows where needed
-- [ ] Add deployment docs for Vercel, Railway, and Supabase
-- [ ] Add a small seed/demo script for local development if we keep mock/demo mode
-
-## Shared contracts
-
-The frozen shared contracts are documented in:
-
-- `docs/contracts.md`
-- `packages/contracts/src/index.ts`
-
-Current contract values:
-
-- Roles: `member`, `reviewer`, `superadmin`
-- Approval states: `pending`, `needs_manual_review`, `approved`, `rejected`, `banned`
-- Review objects: `user_application`, `resource_submission`, `draft_event`, `collab_flag`
-- Moderation actions: `approve`, `reject`, `ban`, `remove`, `dismiss_flag`
-- RSVP statuses: `going`, `interested`, `not_going`
-
-## Related docs
-
-- `docs/terms.md`
-- `docs/privacy.md`
-- `docs/guidelines.md`
-- `docs/deletion.md`
+- docs/terms.md
+- docs/privacy.md
+- docs/guidelines.md
+- docs/deletion.md

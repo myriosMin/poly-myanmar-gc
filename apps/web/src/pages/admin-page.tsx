@@ -4,18 +4,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/layout/empty-state'
 import { PageHeader } from '@/components/layout/page-header'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 
 export function AdminPage() {
   const queryClient = useQueryClient()
   const adminQuery = useQuery({
     queryKey: ['admin-queue'],
-    queryFn: () => mockApi.getAdminQueue(),
+    queryFn: () => api.getAdminQueue(),
   })
 
   const reviewMutation = useMutation({
     mutationFn: ({ id, action }: { id: string; action: 'approve' | 'reject' | 'ban' | 'dismiss_flag' }) =>
-      mockApi.reviewQueueItem(id, action),
+      api.reviewQueueItem(id, action),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin-queue'] })
       await queryClient.invalidateQueries({ queryKey: ['session'] })
@@ -44,7 +44,7 @@ export function AdminPage() {
           <div key={key} className="surface-panel bg-card/82 p-6">
               <p className="section-kicker">{label}</p>
               <p className="section-title mt-2 !text-[2rem]">
-                {adminQuery.data?.totals[key] ?? 0}
+                {adminQuery.data?.totals[key as keyof typeof adminQuery.data.totals] ?? 0}
               </p>
           </div>
         ))}

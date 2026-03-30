@@ -825,6 +825,18 @@ class InMemoryStore:
                     generated.append(flag)
             return generated
 
+    def store_event_draft(self, draft: EventDraftRecord) -> EventDraftRecord:
+        """Persist a worker-generated event draft for admin review."""
+        with self._lock:
+            self.event_drafts[draft.id] = draft
+            return draft
+
+    def store_flag(self, flag: FlagRecord) -> FlagRecord:
+        """Persist a worker-generated suspicious-activity flag for admin review."""
+        with self._lock:
+            self.flags[flag.id] = flag
+            return flag
+
     def queue_counts(self) -> QueueCounts:
         return QueueCounts(
             user_applications=len(self.list_pending_approval_requests().items),

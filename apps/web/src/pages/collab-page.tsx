@@ -13,9 +13,9 @@ import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { FullscreenModal, MobileDrawer } from '@/components/layout/overlay'
 import { PageHeader } from '@/components/layout/page-header'
+import { api } from '@/lib/api'
 import type { CollabCreateInput } from '@/lib/domain'
 import { collabTypes } from '@/lib/domain'
-import { mockApi } from '@/lib/mock-api'
 import { collabCreateSchema, type CollabCreateForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 
@@ -94,7 +94,7 @@ export function CollabPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const collabQuery = useQuery({
     queryKey: ['collab'],
-    queryFn: () => mockApi.getCollabProjects(),
+    queryFn: () => api.getCollabProjects(),
   })
 
   const form = useForm<CollabCreateForm>({
@@ -112,7 +112,7 @@ export function CollabPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: mockApi.createCollabProject,
+    mutationFn: api.createCollabProject,
     onSuccess: async () => {
       form.reset()
       setShowCreateModal(false)
@@ -121,14 +121,14 @@ export function CollabPage() {
   })
 
   const joinMutation = useMutation({
-    mutationFn: mockApi.joinCollab,
+    mutationFn: api.joinCollab,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['collab'] })
     },
   })
 
   const leaveMutation = useMutation({
-    mutationFn: mockApi.leaveCollab,
+    mutationFn: api.leaveCollab,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['collab'] })
     },
@@ -287,7 +287,7 @@ export function CollabPage() {
                 <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary" />
-                    {project.members.length}/{project.teamSize} members
+                    {project.memberCount}/{project.teamSize} members
                   </span>
                   <span className="inline-flex items-center gap-2">
                     <Link2 className="h-4 w-4 text-primary" />

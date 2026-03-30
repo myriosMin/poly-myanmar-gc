@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 from .settings import WorkerSettings
+
+if TYPE_CHECKING:
+    from .api_client import ApiClient
 
 
 @dataclass(slots=True)
@@ -41,8 +45,9 @@ class WorkerReport:
 
 
 class WorkerEngine:
-    def __init__(self, settings: WorkerSettings) -> None:
+    def __init__(self, settings: WorkerSettings, api_client: ApiClient | None = None) -> None:
         self.settings = settings
+        self.api_client = api_client
         self._tokens = [
             {"id": uuid4(), "expires_at": datetime.now(UTC) - timedelta(minutes=5)},
             {"id": uuid4(), "expires_at": datetime.now(UTC) + timedelta(minutes=30)},
@@ -66,24 +71,53 @@ class WorkerEngine:
             )
         return suggestions
 
-    def detect_suspicious_activity(self) -> list[SuspiciousActivityFlag]:
+    def _flags_from_urls(self, urls: list[tuple[str, UUID | None]]) -> list[SuspiciousActivityFlag]:
         suspicious_domains = {"bit.ly", "tinyurl.com", "goo.gl"}
-        samples = [
-            ("resource_submission", uuid4(), "medium", "Repeated rejected submissions from the same member"),
-            ("collab_flag", uuid4(), "high", "Burst of removals tied to one listing"),
-        ]
-        flags = [SuspiciousActivityFlag(subject_type=s_type, subject_id=s_id, severity=severity, reason=reason) for s_type, s_id, severity, reason in samples]
-        for feed in self.settings.source_feeds:
-            hostname = urlparse(feed).hostname or ""
+        trusted_domains = {"www.imda.gov.sg", "www.singaporetech.edu.sg"}
+        flags: list[SuspiciousActivityFlag] = []
+        for url, submission_id in urls:
+            hostname = urlparse(url).hostname or ""
             if hostname in suspicious_domains:
                 flags.append(
                     SuspiciousActivityFlag(
                         subject_type="resource_submission",
+                        subject_id=submission_id or uuid4(),
                         severity="high",
                         reason=f"Suspicious event source: {hostname}",
                     )
                 )
+            elif hostname and hostname not in trusted_domains:
+                flags.append(
+                    SuspiciousActivityFlag(
+                        subject_type="resource_submission",
+                        subject_id=submission_id or uuid4(),
+                        severity="medium",
+                        reason=f"Unverified event source domain: {hostname}",
+                    )
+                )
         return flags
+
+    def detect_suspicious_activity(self) -> list[SuspiciousActivityFlag]:
+        if self.api_client is not None:
+            submissions = self.api_client.list_resource_submissions()
+            submission_urls: list[tuple[str, UUID | None]] = []
+            for submission in submissions:
+                url_value = submission.get("url")
+                if not isinstance(url_value, str):
+                    continue
+                submission_id: UUID | None = None
+                raw_id = submission.get("id")
+                if isinstance(raw_id, str):
+                    try:
+                        submission_id = UUID(raw_id)
+                    except ValueError:
+                        submission_id = None
+                submission_urls.append((url_value, submission_id))
+            if submission_urls:
+                return self._flags_from_urls(submission_urls)
+
+        # Fallback for local/offline mode where API submissions are unavailable.
+        return self._flags_from_urls([(feed, None) for feed in self.settings.source_feeds])
 
     def sweep_expired_tokens(self) -> int:
         before = len(self._tokens)
@@ -95,6 +129,13 @@ class WorkerEngine:
         report = WorkerReport(started_at=datetime.now(UTC))
         report.generated_drafts = self.source_weekly_events()
         report.suspicious_flags = self.detect_suspicious_activity()
+
+        if self.api_client is not None:
+            for draft in report.generated_drafts:
+                self.api_client.push_event_draft(draft)
+            for flag in report.suspicious_flags:
+                self.api_client.push_flag(flag)
+
         report.expired_tokens_cleared = self.sweep_expired_tokens()
         report.notifications_sent = len(report.generated_drafts) + len(report.suspicious_flags)
         report.finished_at = datetime.now(UTC)
