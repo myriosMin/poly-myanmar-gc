@@ -11,6 +11,7 @@ from supabase import Client
 from ..models import (
     ApprovalRequestRecord,
     ApprovalState,
+    EventDraftRecord,
     FlagRecord,
     FlagStatus,
     ModerationAction,
@@ -330,3 +331,55 @@ def detect_suspicious_activity(*, client: Client | None = None) -> list[FlagReco
             generated.append(_hydrate_flag(response.data[0]))
 
     return generated
+
+
+def store_event_draft(draft: EventDraftRecord, *, client: Client | None = None) -> EventDraftRecord:
+    resolved_client = _resolve_client(client)
+    response = (
+        resolved_client.table("event_drafts")
+        .insert(
+            {
+                "id": str(draft.id),
+                "title": draft.title,
+                "kind": draft.kind,
+                "description": draft.description,
+                "location": draft.location,
+                "starts_at": draft.starts_at.isoformat(),
+                "ends_at": draft.ends_at.isoformat() if draft.ends_at is not None else None,
+                "source_url": str(draft.source_url) if draft.source_url is not None else None,
+                "source_name": draft.source_name,
+                "source_confidence": draft.source_confidence,
+                "status": str(draft.status),
+                "reviewer_notes": draft.reviewer_notes,
+                "reviewed_by": str(draft.reviewed_by) if draft.reviewed_by is not None else None,
+                "reviewed_at": draft.reviewed_at.isoformat() if draft.reviewed_at is not None else None,
+                "created_at": draft.created_at.isoformat(),
+                "updated_at": draft.updated_at.isoformat(),
+                "capacity": draft.capacity,
+            }
+        )
+        .execute()
+    )
+    return EventDraftRecord(**response.data[0])
+
+
+def store_flag(flag: FlagRecord, *, client: Client | None = None) -> FlagRecord:
+    resolved_client = _resolve_client(client)
+    response = (
+        resolved_client.table("flags")
+        .insert(
+            {
+                "id": str(flag.id),
+                "subject_type": str(flag.subject_type),
+                "subject_id": str(flag.subject_id),
+                "severity": flag.severity,
+                "reason": flag.reason,
+                "status": str(flag.status),
+                "created_at": flag.created_at.isoformat(),
+                "resolved_at": flag.resolved_at.isoformat() if flag.resolved_at is not None else None,
+                "resolved_by": str(flag.resolved_by) if flag.resolved_by is not None else None,
+            }
+        )
+        .execute()
+    )
+    return _hydrate_flag(response.data[0])

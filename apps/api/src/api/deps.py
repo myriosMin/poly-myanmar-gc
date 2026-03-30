@@ -49,8 +49,11 @@ def get_authenticated_user(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
         return _resolve_token_user(token)
 
-    # Fallback for local/dev flows while OAuth rollout is in progress.
     settings = get_settings()
+    if not settings.allow_dev_actor_fallback:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+
+    # Optional fallback for local/dev flows when bearer auth is unavailable.
     actor_id = x_actor_id or UUID(settings.default_actor_id)
     actor = store.get_actor(actor_id)
     if actor is None:

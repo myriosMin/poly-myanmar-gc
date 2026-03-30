@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -65,6 +66,40 @@ class TestHealth:
         assert result.resource_submissions >= 0
         assert result.event_drafts >= 0
         assert result.flags >= 0
+
+    def test_store_event_draft_returns_record(self, store: StoreProtocol) -> None:
+        now = datetime.now(UTC)
+        draft = EventDraftRecord(
+            title="Generated event draft",
+            kind="tech talk",
+            description="Auto-generated draft for review.",
+            location="Singapore",
+            starts_at=now,
+            ends_at=None,
+            source_url="https://example.com/event",
+            source_name="worker",
+            source_confidence=75,
+            status=ApprovalState.pending,
+            created_at=now,
+            updated_at=now,
+        )
+        result = store.store_event_draft(draft)
+        assert isinstance(result, EventDraftRecord)
+        assert result.title == draft.title
+        assert result.kind == draft.kind
+
+    def test_store_flag_returns_record(self, store: StoreProtocol) -> None:
+        flag = FlagRecord(
+            subject_type=ReviewObjectType.resource_submission,
+            subject_id=RESOURCE_SUBMISSION_ID,
+            severity="high",
+            reason="Suspicious resource URL",
+            status=FlagStatus.open,
+        )
+        result = store.store_flag(flag)
+        assert isinstance(result, FlagRecord)
+        assert result.subject_id == RESOURCE_SUBMISSION_ID
+        assert result.reason == "Suspicious resource URL"
 
 
 # ---------------------------------------------------------------------------

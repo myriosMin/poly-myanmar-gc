@@ -443,14 +443,6 @@ export const api = {
     return toSession(profile)
   },
 
-  async simulateApproval(): Promise<Session> {
-    const session = await this.getSession()
-    if (!session) {
-      throw new Error('No active session')
-    }
-    return session
-  },
-
   async getDirectory() {
     /**
      * Fetch all approved members once as lite profiles (card fields only)
@@ -540,8 +532,12 @@ export const api = {
   },
 
   async getResources() {
-    const page = await request<ApiPage<ApiResource>>('/resources')
-    const items = page.items.map(toResourceItem)
+    const [resourcesPage, submissionsPage] = await Promise.all([
+      request<ApiPage<ApiResource>>('/resources'),
+      request<ApiPage<ApiResourceSubmission>>('/resources/submissions'),
+    ])
+    const items = resourcesPage.items.map(toResourceItem)
+    const submissions = submissionsPage.items.map(toResourceItem)
     const categoryCounts = new Map<string, number>()
     for (const item of items) {
       for (const category of item.categories) {
@@ -551,7 +547,7 @@ export const api = {
 
     return {
       items,
-      submissions: [],
+      submissions,
       categories: Array.from(categoryCounts.entries()).map(([value, count]) => ({ value, count })),
     }
   },
