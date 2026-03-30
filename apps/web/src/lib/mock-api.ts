@@ -55,6 +55,7 @@ let session: Session = {
   role: 'reviewer',
   approvalState: 'approved',
   polytechnic: 'SP',
+  course: 'Diploma in Information Technology',
   linkedinUrl: 'https://linkedin.com/in/min-thu',
   githubUrl: 'https://github.com/minthu',
   portfolioUrl: 'https://minthu.dev',

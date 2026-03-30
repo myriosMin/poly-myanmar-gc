@@ -1,24 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Clock3, MailCheck, ShieldCheck } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/layout/page-header'
-import { mockApi } from '@/lib/mock-api'
 import { useSessionQuery } from '@/lib/query'
 
 export function PendingApprovalPage() {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { data: session } = useSessionQuery()
-
-  const approveMutation = useMutation({
-    mutationFn: mockApi.simulateApproval,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['session'] })
-      navigate('/profiles')
-    },
-  })
 
   return (
     <div className="space-y-8">
@@ -70,16 +56,6 @@ export function PendingApprovalPage() {
               ))}
             </div>
 
-            {import.meta.env.DEV ? (
-              <Button
-                className="w-full md:w-auto"
-                variant="outline"
-                onClick={() => approveMutation.mutate()}
-                disabled={approveMutation.isPending}
-              >
-                {approveMutation.isPending ? 'Approving...' : 'Simulate reviewer approval'}
-              </Button>
-            ) : null}
           </div>
         </div>
 
