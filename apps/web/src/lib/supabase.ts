@@ -89,3 +89,20 @@ export async function signInOrSignUpWithPassword(email: string, password: string
 
   return { kind: 'signed-in' } satisfies PasswordAuthResult
 }
+
+export async function signInWithGoogle() {
+  if (!supabase) {
+    throw new Error('Supabase auth is not configured')
+  }
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${globalThis.location.origin}/auth`,
+    },
+  })
+
+  if (error) {
+    throw error
+  }
+}
