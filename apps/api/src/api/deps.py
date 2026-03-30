@@ -81,7 +81,7 @@ def get_actor(
             .maybe_single()
             .execute()
         )
-        if result.data is not None:
+        if result is not None and result.data is not None:
             return ProfileRecord(**result.data)
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown actor profile")

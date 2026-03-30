@@ -413,7 +413,7 @@ export const mockApi = {
     await pause()
     session = {
       ...session,
-      name: input.name,
+      name: input.username,
       approvalState: 'pending',
       email: input.email,
       linkedinUrl: input.linkedinUrl,
@@ -423,7 +423,7 @@ export const mockApi = {
       {
         id: `queue-${Date.now()}`,
         type: 'user_application',
-        title: input.name,
+        title: input.username,
         summary: 'LinkedIn profile provided. Waiting on reviewer approval.',
         submittedBy: input.linkedinUrl,
         createdAt: new Date().toISOString(),

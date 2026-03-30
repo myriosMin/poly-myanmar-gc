@@ -168,7 +168,7 @@ export interface ProfileFilters {
 }
 
 export interface OnboardingInput {
-  name: string
+  username: string
   email: string
   linkedinUrl: string
 }

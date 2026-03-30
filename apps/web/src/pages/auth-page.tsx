@@ -57,7 +57,7 @@ export function AuthPage() {
   const form = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      name: session?.name ?? '',
+      username: '',
       email: session?.email ?? '',
       linkedinUrl: 'https://linkedin.com/in/',
       password: '',
@@ -69,7 +69,7 @@ export function AuthPage() {
       setNotice(null)
 
       const onboardingPayload: OnboardingInput = {
-        name: values.name,
+        username: values.username,
         email: values.email,
         linkedinUrl: values.linkedinUrl,
       }
@@ -234,9 +234,9 @@ export function AuthPage() {
             <Field
               label="Username"
               hint="How you want others to see you in the community."
-              error={form.formState.errors.name?.message}
+              error={form.formState.errors.username?.message}
             >
-              <Input {...form.register('name')} placeholder="Hanni" />
+              <Input {...form.register('username')} placeholder="hanni" />
             </Field>
 
             <Field

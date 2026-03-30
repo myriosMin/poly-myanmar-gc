@@ -6,7 +6,7 @@ import {
 } from '@/lib/domain'
 
 export const onboardingSchema = z.object({
-  name: z.string().min(2, 'Enter your full name'),
+  username: z.string().min(2, 'Enter a username'),
   email: z.string().email('Use a valid email address'),
   linkedinUrl: z.url('Use a valid LinkedIn URL'),
   password: z.string().min(8, 'Use at least 8 characters'),

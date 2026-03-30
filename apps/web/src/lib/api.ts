@@ -41,21 +41,21 @@ type ApiMeResponse = {
 type ApiProfile = {
   id: string
   email: string
-  google_subject: string
+  google_subject: string | null
   role: Session['role']
   approval_status: Session['approvalState']
-  name: string
-  polytechnic: string
-  course: string
-  graduation_year: number
+  name: string | null
+  polytechnic: string | null
+  course: string | null
+  graduation_year: number | null
   linkedin_url: string
   github_url: string | null
   portfolio_url: string | null
-  skills: string[]
-  hobbies: string[]
-  status_badges: string[]
-  open_to_collab: boolean
-  job_seeking: boolean
+  skills: string[] | null
+  hobbies: string[] | null
+  status_badges: string[] | null
+  open_to_collab: boolean | null
+  job_seeking: boolean | null
   created_at: string
 }
 
@@ -202,60 +202,68 @@ function createAvatar(seed: string): string {
 }
 
 function toSession(profile: ApiProfile): Session {
+  const statusBadges = profile.status_badges ?? []
+  const jobSeeking = profile.job_seeking ?? false
+  const polytechnic = profile.polytechnic ?? 'SP'
   const statusBadge =
-    (profile.status_badges.find((badge) =>
+    (statusBadges.find((badge) =>
       studentStatuses.includes(badge as (typeof studentStatuses)[number]),
     ) as Session['statusBadge'] | undefined) ??
-    (profile.job_seeking ? 'looking for job' : 'current student')
+    (jobSeeking ? 'looking for job' : 'current student')
 
   return {
     id: profile.id,
-    name: profile.name,
+    name: profile.name ?? 'Member',
     email: profile.email,
     role: profile.role,
     approvalState: profile.approval_status,
-    polytechnic: (polytechnics.includes(profile.polytechnic as (typeof polytechnics)[number])
-      ? profile.polytechnic
+    polytechnic: (polytechnics.includes(polytechnic as (typeof polytechnics)[number])
+      ? polytechnic
       : 'SP') as Session['polytechnic'],
     linkedinUrl: profile.linkedin_url,
     githubUrl: profile.github_url ?? undefined,
     portfolioUrl: profile.portfolio_url ?? undefined,
     statusBadge,
-    openToCollab: profile.open_to_collab,
-    jobSeeking: profile.job_seeking,
+    openToCollab: profile.open_to_collab ?? false,
+    jobSeeking,
     publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl'],
   }
 }
 
 function toDirectoryProfile(profile: ApiProfile): DirectoryProfile {
+  const statusBadges = profile.status_badges ?? []
+  const jobSeeking = profile.job_seeking ?? false
+  const profileName = profile.name ?? 'Member'
+  const profileCourse = profile.course ?? 'Not provided yet'
+  const profilePolytechnic = profile.polytechnic ?? 'SP'
   const statusBadge =
-    (profile.status_badges.find((badge) =>
+    (statusBadges.find((badge) =>
       studentStatuses.includes(badge as (typeof studentStatuses)[number]),
     ) as DirectoryProfile['statusBadge'] | undefined) ??
-    (profile.job_seeking ? 'looking for job' : 'current student')
+    (jobSeeking ? 'looking for job' : 'current student')
 
   return {
     id: profile.id,
-    name: profile.name,
-    avatarUrl: createAvatar(profile.name),
-    polytechnic: (polytechnics.includes(profile.polytechnic as (typeof polytechnics)[number])
-      ? profile.polytechnic
+    name: profileName,
+    avatarUrl: createAvatar(profileName),
+    polytechnic: (polytechnics.includes(profilePolytechnic as (typeof polytechnics)[number])
+      ? profilePolytechnic
       : 'SP') as DirectoryProfile['polytechnic'],
-    course: profile.course,
-    graduationYear: profile.graduation_year,
+    course: profileCourse,
+    graduationYear: profile.graduation_year ?? new Date().getFullYear(),
     joinedAt: profile.created_at,
-    bio: `${profile.course} member in Singapore community network.`,
-    skills: profile.skills,
-    hobbies: profile.hobbies,
+    bio: `${profileCourse} member in Singapore community network.`,
+    skills: profile.skills ?? [],
+    hobbies: profile.hobbies ?? [],
     portfolioUrl: profile.portfolio_url ?? undefined,
     githubUrl: profile.github_url ?? undefined,
     linkedinUrl: profile.linkedin_url,
     gmail: profile.email,
     statusBadge,
-    openToCollab: profile.open_to_collab,
+    openToCollab: profile.open_to_collab ?? false,
     attendingEvents: false,
-    jobSeeking: profile.job_seeking,
-    badges: Array.from(new Set([statusBadge, ...(profile.status_badges as DirectoryProfile['badges'])])),
+    jobSeeking,
+    badges: Array.from(new Set([statusBadge, ...(statusBadges as DirectoryProfile['badges'])])),
     eventHistory: [],
     collabHistory: [],
   }
@@ -352,22 +360,22 @@ export const api = {
 
   async submitOnboarding(input: OnboardingInput): Promise<Session> {
     const authUser = await getAuthenticatedUser()
-    const fallbackPolytechnic = 'SP'
     const payload = {
       user_id: authUser.id,
+      username: input.username,
       email: authUser.email,
       google_subject: authUser.id,
-      name: input.name,
-      polytechnic: fallbackPolytechnic,
-      course: 'Not provided yet',
-      graduation_year: new Date().getFullYear(),
+      name: null,
+      polytechnic: null,
+      course: null,
+      graduation_year: null,
       linkedin_url: input.linkedinUrl,
       github_url: null,
       portfolio_url: null,
-      skills: ['community member'],
-      hobbies: ['networking'],
-      open_to_collab: true,
-      job_seeking: false,
+      skills: null,
+      hobbies: null,
+      open_to_collab: null,
+      job_seeking: null,
       manual_verification_notes: null,
       manual_proof_url: null,
     }

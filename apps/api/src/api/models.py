@@ -96,22 +96,23 @@ class Page(BaseModel, Generic[T]):
 
 class ProfileRecord(BaseModel):
     id: UUID = Field(default_factory=uuid4)
+    username: str
     email: str
-    google_subject: str
+    google_subject: str | None = None
     role: Role = Role.member
     approval_status: ApprovalState = ApprovalState.pending
-    name: str
-    polytechnic: str
-    course: str
-    graduation_year: int
+    name: str | None = None
+    polytechnic: str | None = None
+    course: str | None = None
+    graduation_year: int | None = None
     linkedin_url: HttpUrl
     github_url: HttpUrl | None = None
     portfolio_url: HttpUrl | None = None
-    skills: list[str] = Field(default_factory=list)
-    hobbies: list[str] = Field(default_factory=list)
-    status_badges: list[str] = Field(default_factory=list)
-    open_to_collab: bool = False
-    job_seeking: bool = False
+    skills: list[str] | None = None
+    hobbies: list[str] | None = None
+    status_badges: list[str] | None = None
+    open_to_collab: bool | None = None
+    job_seeking: bool | None = None
     manual_verification_notes: str | None = None
     manual_proof_url: HttpUrl | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -132,19 +133,20 @@ class ProfileRecord(BaseModel):
 
 class OnboardingSubmitRequest(BaseModel):
     user_id: UUID
+    username: str
     email: str
-    google_subject: str
-    name: str
-    polytechnic: str
-    course: str
-    graduation_year: int
+    google_subject: str | None = None
+    name: str | None = None
+    polytechnic: str | None = None
+    course: str | None = None
+    graduation_year: int | None = None
     linkedin_url: HttpUrl
     github_url: HttpUrl | None = None
     portfolio_url: HttpUrl | None = None
-    skills: list[str] = Field(default_factory=list)
-    hobbies: list[str] = Field(default_factory=list)
-    open_to_collab: bool = False
-    job_seeking: bool = False
+    skills: list[str] | None = None
+    hobbies: list[str] | None = None
+    open_to_collab: bool | None = None
+    job_seeking: bool | None = None
     manual_verification_notes: str | None = None
     manual_proof_url: HttpUrl | None = None
 
