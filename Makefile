@@ -51,6 +51,7 @@ pytest-api:
 
 test-worker:
 	PYTHONPATH=apps/worker/src uv run --directory apps/worker python -c "from worker.jobs import WorkerEngine; from worker.settings import load_settings; engine = WorkerEngine(load_settings()); report = engine.run_once(); print('drafts', len(report.generated_drafts)); print('flags', len(report.suspicious_flags)); print('notifications', report.notifications_sent)"
+	PYTHONPATH=apps/worker/src uv run --directory apps/worker python -m unittest discover -s tests -p "test_*.py"
 
 test: lint-web build-web test-api pytest-api test-worker
 

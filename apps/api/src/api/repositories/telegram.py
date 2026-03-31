@@ -12,6 +12,7 @@ from ..models import (
     ProfileRecord,
     ReviewObjectType,
     TelegramActionTokenRecord,
+    TelegramTokenSweepResponse,
     TelegramWebhookRequest,
     TelegramWebhookResponse,
 )
@@ -146,6 +147,11 @@ def apply_telegram_webhook(
 
 
 def sweep_expired_tokens(*, client: Client | None = None) -> int:
+    details = sweep_expired_tokens_detailed(client=client)
+    return details.total_removed
+
+
+def sweep_expired_tokens_detailed(*, client: Client | None = None) -> TelegramTokenSweepResponse:
     resolved_client = _resolve_client(client)
     consumed_response = (
         resolved_client.table("telegram_action_tokens")
@@ -159,4 +165,10 @@ def sweep_expired_tokens(*, client: Client | None = None) -> int:
         .lt("expires_at", _now().isoformat())
         .execute()
     )
-    return (consumed_response.count or 0) + (expired_response.count or 0)
+    consumed_removed = consumed_response.count or 0
+    expired_removed = expired_response.count or 0
+    return TelegramTokenSweepResponse(
+        consumed_removed=consumed_removed,
+        expired_removed=expired_removed,
+        total_removed=consumed_removed + expired_removed,
+    )
