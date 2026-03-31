@@ -26,7 +26,7 @@ export function AdminPage() {
   })
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Admin"
         title="Review the club queue with the same quiet clarity as the rest of the product."
@@ -34,16 +34,16 @@ export function AdminPage() {
         actions={<Badge variant="outline">{adminQuery.data?.items.length ?? 0} items</Badge>}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
         {[
           ['user_application', 'Applications'],
           ['resource_submission', 'Resources'],
           ['draft_event', 'Draft events'],
           ['collab_flag', 'Flags'],
         ].map(([key, label]) => (
-          <div key={key} className="surface-panel bg-card/82 p-6">
+          <div key={key} className="surface-panel bg-card/82 p-4 sm:p-6">
               <p className="section-kicker">{label}</p>
-              <p className="section-title mt-2 !text-[2rem]">
+              <p className="section-title mt-2 !text-[1.6rem] sm:!text-[2rem]">
                 {adminQuery.data?.totals[key as keyof typeof adminQuery.data.totals] ?? 0}
               </p>
           </div>

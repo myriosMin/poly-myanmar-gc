@@ -124,11 +124,11 @@ function ProfileOverlay({
         onClick={onClose}
       />
 
-      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-0 pb-6 pt-0 md:pb-8">
+      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-3 pb-4 pt-0 sm:px-4 md:px-0 md:pb-8">
         <div className="surface-blur flex items-center justify-between rounded-b-[2rem] rounded-t-none px-4 py-4 md:px-6">
           <div>
             <p className="section-kicker">Member profile</p>
-            <p className="mt-2 font-display text-3xl font-semibold">{profile.name}</p>
+            <p className="mt-2 font-display text-2xl font-semibold sm:text-3xl">{profile.name}</p>
           </div>
           <Button type="button" variant="outline" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -140,10 +140,10 @@ function ProfileOverlay({
             <img
               src={profile.avatarUrl}
               alt={profile.name}
-              className="mx-auto h-40 w-40 rounded-full border border-border/60 object-cover md:h-48 md:w-48"
+              className="mx-auto h-32 w-32 rounded-full border border-border/60 object-cover sm:h-40 sm:w-40 md:h-48 md:w-48"
             />
             <div className="mt-5">
-              <h2 className="font-display text-4xl font-semibold leading-none">{profile.name}</h2>
+              <h2 className="font-display text-3xl font-semibold leading-none sm:text-4xl">{profile.name}</h2>
               <p className="mt-3 text-sm text-muted-foreground">{profile.polytechnic}</p>
               <p className="mt-1 text-sm text-muted-foreground">{profile.course}</p>
             </div>
@@ -628,7 +628,7 @@ export function ProfilesPage() {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Profiles"
         title="Meet the right member without wading through noise."
@@ -636,14 +636,14 @@ export function ProfilesPage() {
         actions={
           <>
             <HeaderSocialLinks />
-            <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+            <Badge variant="outline" className="h-10 px-3 text-xs normal-case tracking-[0.1em] sm:h-11 sm:px-4 sm:text-sm sm:tracking-[0.14em]">
               <UsersRound className="mr-1 h-3.5 w-3.5" />
               {filteredProfilesData?.total ?? 0} members
             </Badge>
             <Button
               type="button"
               variant="outline"
-              className="h-11 px-4 lg:hidden"
+              className="h-10 px-3 text-xs sm:h-11 sm:px-4 sm:text-sm lg:hidden"
               onClick={() => setShowMobileSidebar(true)}
             >
               <Filter className="h-3.5 w-3.5" />
@@ -761,7 +761,7 @@ export function ProfilesPage() {
                           <p className="section-kicker">
                             {profile.polytechnic}
                           </p>
-                          <p className="mt-3 truncate font-display text-3xl font-semibold">
+                          <p className="mt-3 truncate font-display text-2xl font-semibold sm:text-3xl">
                             {profile.name}
                           </p>
                           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
@@ -783,7 +783,7 @@ export function ProfilesPage() {
                           <img
                             src={profile.avatarUrl}
                             alt={profile.name}
-                            className="h-24 w-24 rounded-full border-[2px] border-border object-cover md:h-36 md:w-36"
+                            className="h-20 w-20 rounded-full border-[2px] border-border object-cover sm:h-24 sm:w-24 md:h-36 md:w-36"
                           />
                           <ArrowUpRight className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-card text-muted-foreground" />
                         </button>
@@ -851,12 +851,12 @@ export function ProfilesPage() {
                 aria-label="Close filters"
                 onClick={() => setShowMobileSidebar(false)}
               />
-              <div className="relative inset-x-0 mx-4 mb-4 mt-0">
+              <div className="relative inset-x-0 mx-3 mb-3 mt-0 sm:mx-4 sm:mb-4">
                 <div className="surface-panel rounded-t-none rounded-b-[2rem] p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <p className="section-kicker">Filters</p>
-                      <p className="mt-2 font-display text-3xl font-semibold">Discovery panel</p>
+                      <p className="mt-2 font-display text-2xl font-semibold sm:text-3xl">Discovery panel</p>
                     </div>
                     <Button
                       type="button"

@@ -146,7 +146,7 @@ export function SettingsPage() {
   const publicFields = form.watch('publicFields')
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Settings"
         title="Control what members see first, and what stays private."
@@ -158,8 +158,8 @@ export function SettingsPage() {
         }
       />
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="surface-panel p-8">
+      <section className="grid gap-4 lg:gap-6 xl:grid-cols-[1fr_0.9fr]">
+        <div className="surface-panel p-4 sm:p-6 lg:p-8">
           <div className="flex items-center gap-2">
             <UserCog className="h-5 w-5 text-primary" />
             <p className="section-title">Profile details</p>
@@ -331,7 +331,7 @@ export function SettingsPage() {
         </div>
 
         <div className="grid gap-4">
-          <div className="surface-panel bg-primary p-8 text-primary-foreground">
+          <div className="surface-panel bg-primary p-4 sm:p-6 lg:p-8 text-primary-foreground">
             <Eye className="h-5 w-5" />
             <p className="section-title mt-4 text-primary-foreground">
               Visibility should feel deliberate.
@@ -342,7 +342,7 @@ export function SettingsPage() {
             </p>
           </div>
 
-          <div className="surface-panel p-8">
+          <div className="surface-panel p-4 sm:p-6 lg:p-8">
             <p className="section-kicker">Current account</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge>{settingsQuery.data?.approvalState ?? 'loading'}</Badge>

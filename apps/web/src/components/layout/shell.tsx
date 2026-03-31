@@ -123,7 +123,7 @@ function MobileMenu({
   }
 
   return (
-    <div className="mt-4 space-y-3 border-t border-border/60 pt-4 lg:hidden">
+    <div className="mt-3 space-y-3 border-t border-border/60 pt-3 lg:hidden">
       <nav className="grid gap-2">
         {privateNav.map((item) => {
           const Icon = item.icon
@@ -192,13 +192,13 @@ export function AppShell() {
         <div className="shell-glow-left absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full blur-3xl" />
         <div className="shell-glow-right absolute right-[-4rem] top-24 h-64 w-64 rounded-full blur-3xl" />
       </div>
-      <div className="relative mx-auto flex min-h-screen max-w-[1500px] flex-col px-4 pb-10 pt-4 md:px-6">
-        <header className="surface-blur sticky top-4 z-30 rounded-[2rem] px-4 py-4 md:px-6">
+      <div className="relative mx-auto flex min-h-screen max-w-[1500px] flex-col px-3 pb-8 pt-3 sm:px-4 sm:pb-10 sm:pt-4 md:px-6">
+        <header className="surface-blur sticky top-3 z-30 rounded-[1.4rem] px-3 py-3 sm:top-4 sm:rounded-[2rem] sm:px-4 sm:py-4 md:px-6">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 shrink-0">
               <p className="section-kicker">Graduate club</p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
-                <NavLink to="/profiles" className="block font-display text-[2rem] font-semibold leading-none">
+                <NavLink to="/profiles" className="block font-display text-[1.45rem] font-semibold leading-none sm:text-[2rem]">
                   Poly Myanmar
                 </NavLink>
                 <span className="hidden h-5 w-px bg-border/70 xl:block" />
@@ -232,7 +232,7 @@ export function AppShell() {
           <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
         </header>
 
-        <main className="mx-auto w-full max-w-[1380px] flex-1 px-0 pt-8">
+        <main className="mx-auto w-full max-w-[1380px] flex-1 px-0 pt-6 sm:pt-8">
           <Outlet />
         </main>
 
@@ -261,13 +261,13 @@ export function PublicShell({ children }: { children: ReactNode }) {
         <div className="shell-glow-left absolute left-[-6rem] top-[-8rem] h-64 w-64 rounded-full blur-3xl" />
         <div className="shell-glow-right absolute right-[-4rem] top-24 h-64 w-64 rounded-full blur-3xl" />
       </div>
-      <div className="relative mx-auto flex min-h-screen max-w-[1480px] flex-col px-4 py-4 md:px-6">
-        <header className="surface-blur sticky top-4 z-20 rounded-[2rem] px-4 py-4 md:px-6">
+      <div className="relative mx-auto flex min-h-screen max-w-[1480px] flex-col px-3 py-3 sm:px-4 sm:py-4 md:px-6">
+        <header className="surface-blur sticky top-3 z-20 rounded-[1.4rem] px-3 py-3 sm:top-4 sm:rounded-[2rem] sm:px-4 sm:py-4 md:px-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="section-kicker">Graduate Club</p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
-                <p className="font-display text-3xl font-semibold">Poly Myanmar</p>
+                <p className="font-display text-2xl font-semibold sm:text-3xl">Poly Myanmar</p>
                 <Badge variant="outline">Private access</Badge>
               </div>
             </div>

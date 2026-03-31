@@ -47,7 +47,7 @@ export function CompleteProfilePage() {
   const selectedPolytechnic = form.watch('polytechnic')
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="One more step"
         title="Complete your profile to enter the network."
@@ -55,8 +55,8 @@ export function CompleteProfilePage() {
         actions={<Badge variant="secondary">Required now</Badge>}
       />
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="surface-panel p-8">
+      <section className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-[1fr_0.9fr]">
+        <div className="surface-panel p-4 sm:p-6 lg:p-8">
           <form
             className="grid gap-4"
             noValidate
@@ -108,7 +108,7 @@ export function CompleteProfilePage() {
           </form>
         </div>
 
-        <div className="surface-panel bg-primary p-8 text-primary-foreground">
+        <div className="surface-panel bg-primary p-4 sm:p-6 lg:p-8 text-primary-foreground">
           <GraduationCap className="h-5 w-5" />
           <p className="section-title mt-4 text-primary-foreground">Why we ask these two fields</p>
           <p className="body-copy mt-3 text-primary-foreground/80">

@@ -255,7 +255,7 @@ export function ResourcesPage() {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Resources"
         title="Keep useful links in one calm, searchable place."
@@ -263,10 +263,10 @@ export function ResourcesPage() {
         actions={
           <>
             <HeaderSocialLinks />
-            <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+            <Badge variant="outline" className="h-10 px-3 text-xs normal-case tracking-[0.1em] sm:h-11 sm:px-4 sm:text-sm sm:tracking-[0.14em]">
               {filteredResources.length} visible
             </Badge>
-            <Button type="button" variant="outline" className="h-11 px-4 lg:hidden" onClick={() => setShowMobileSidebar(true)}>
+            <Button type="button" variant="outline" className="h-10 px-3 text-xs sm:h-11 sm:px-4 sm:text-sm lg:hidden" onClick={() => setShowMobileSidebar(true)}>
               <Filter className="h-3.5 w-3.5" />
               Filters
             </Button>
@@ -274,14 +274,14 @@ export function ResourcesPage() {
               type="button"
               variant="outline"
               size="icon"
-              className="h-11 w-11"
+              className="h-10 w-10 sm:h-11 sm:w-11"
               onClick={() => void refreshResources()}
               disabled={resourcesQuery.isFetching}
               title="Refresh resources"
             >
               <RefreshCw className={cn('h-4 w-4', resourcesQuery.isFetching && 'animate-spin')} />
             </Button>
-            <Button type="button" className="h-11 px-4" onClick={() => setShowCreateModal(true)}>
+            <Button type="button" className="h-10 px-3 text-xs sm:h-11 sm:px-4 sm:text-sm" onClick={() => setShowCreateModal(true)}>
               <PlusCircle className="h-4 w-4" />
               Post resource
             </Button>
@@ -289,7 +289,7 @@ export function ResourcesPage() {
         }
       />
 
-      <section className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-5">
         <aside className="hidden lg:block">{sidebar}</aside>
 
         <div className="space-y-4">
@@ -371,7 +371,7 @@ export function ResourcesPage() {
               <div key={resource.id} className="content-row">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="max-w-2xl">
-                    <p className="font-display text-3xl font-semibold">{resource.title}</p>
+                    <p className="font-display text-2xl font-semibold sm:text-3xl">{resource.title}</p>
                     <p className="mt-2 text-sm text-muted-foreground">{resource.description}</p>
                   </div>
                   <Badge variant="outline">{resource.status}</Badge>

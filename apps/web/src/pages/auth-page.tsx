@@ -216,9 +216,9 @@ export function AuthPage() {
   }, [form, mode, navigate, queryClient])
 
   return (
-    <div className="space-y-8 pb-12">
-      <section className="page-reveal grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
-        <div className="relative overflow-hidden px-6 py-8 md:px-8 md:py-10">
+    <div className="space-y-6 pb-10 sm:space-y-8 sm:pb-12">
+      <section className="page-reveal grid gap-4 lg:gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+        <div className="relative overflow-hidden px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10">
           <div className="absolute inset-x-0 top-0 h-40 from-primary/8 via-transparent to-transparent" />
           <div className="relative space-y-8">
             <div className="flex flex-wrap gap-2">
@@ -228,7 +228,7 @@ export function AuthPage() {
 
             <div className="max-w-4xl">
               <p className="section-kicker">Private network for Myanmar polytechnic students</p>
-              <h1 className="mt-5 max-w-3xl font-display text-5xl font-semibold leading-[0.96] md:text-7xl">
+              <h1 className="mt-5 max-w-3xl font-display text-4xl font-semibold leading-[0.96] sm:text-5xl md:text-7xl">
                 Warm access to the right people, events, and opportunities.
               </h1>
               <p className="body-copy mt-5 max-w-xl !text-base md:!text-lg">
@@ -237,7 +237,7 @@ export function AuthPage() {
               </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
               {[
                 {
                   icon: Users2,
@@ -257,11 +257,11 @@ export function AuthPage() {
               ].map((item, index) => (
                 <div
                   key={item.title}
-                  className="card-float rounded-[1.8rem] border border-border/60 bg-background/62 p-5"
+                  className="card-float rounded-[1.4rem] sm:rounded-[1.8rem] border border-border/60 bg-background/62 p-4 sm:p-5"
                   style={{ animationDelay: `${index * 90}ms` }}
                 >
                   <item.icon className="h-5 w-5 text-primary" />
-                  <p className="section-title mt-5 !text-[1.9rem] leading-tight">{item.title}</p>
+                  <p className="section-title mt-5 !text-[1.5rem] sm:!text-[1.9rem] leading-tight">{item.title}</p>
                   <p className="body-copy mt-2 !text-sm">{item.body}</p>
                 </div>
               ))}
@@ -269,7 +269,7 @@ export function AuthPage() {
           </div>
         </div>
 
-        <div className="surface-panel page-reveal self-start p-6 md:p-8">
+        <div className="surface-panel page-reveal self-start p-5 sm:p-6 md:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="section-kicker">Join Poly Myanmar</p>
