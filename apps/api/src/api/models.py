@@ -369,6 +369,15 @@ class TelegramActionTokenRecord(BaseModel):
     consumed_at: datetime | None = None
 
 
+class TelegramTokenCreateRequest(BaseModel):
+    review_object_type: ReviewObjectType
+    review_object_id: UUID
+    action: ModerationAction
+    actor_telegram_id: int | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    ttl_seconds: int | None = Field(default=None, ge=60, le=86400)
+
+
 class TelegramWebhookRequest(BaseModel):
     action_token: UUID
     review_object_type: ReviewObjectType
@@ -384,6 +393,12 @@ class TelegramWebhookResponse(BaseModel):
     action: ModerationAction
     review_object_type: ReviewObjectType
     review_object_id: UUID
+
+
+class TelegramTokenSweepResponse(BaseModel):
+    consumed_removed: int
+    expired_removed: int
+    total_removed: int
 
 
 class QueueCounts(BaseModel):

@@ -30,6 +30,7 @@ from .models import (
     RsvpRecord,
     RsvpStatus,
     TelegramActionTokenRecord,
+    TelegramTokenSweepResponse,
     TelegramWebhookRequest,
     TelegramWebhookResponse,
 )
@@ -239,7 +240,10 @@ class SupabaseStore:
         return telegram.apply_telegram_webhook(actor, payload, client=self._client)
 
     def sweep_expired_tokens(self) -> int:
-        return telegram.sweep_expired_tokens(client=self._client)
+        return self.sweep_expired_tokens_detailed().total_removed
+
+    def sweep_expired_tokens_detailed(self) -> TelegramTokenSweepResponse:
+        return telegram.sweep_expired_tokens_detailed(client=self._client)
 
     # -- system --
 

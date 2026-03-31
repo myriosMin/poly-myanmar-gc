@@ -28,6 +28,7 @@ from .models import (
     RsvpRecord,
     RsvpStatus,
     TelegramActionTokenRecord,
+    TelegramTokenSweepResponse,
     TelegramWebhookRequest,
     TelegramWebhookResponse,
 )
@@ -161,6 +162,8 @@ class StoreProtocol(Protocol):
     def apply_telegram_webhook(self, actor: ProfileRecord, payload: TelegramWebhookRequest) -> TelegramWebhookResponse: ...
 
     def sweep_expired_tokens(self) -> int: ...
+
+    def sweep_expired_tokens_detailed(self) -> TelegramTokenSweepResponse: ...
 
     def detect_suspicious_activity(self) -> list[FlagRecord]: ...
 
