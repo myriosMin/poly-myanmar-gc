@@ -90,6 +90,19 @@ export async function signInOrSignUpWithPassword(email: string, password: string
   return { kind: 'signed-in' } satisfies PasswordAuthResult
 }
 
+export async function signInWithPassword(email: string, password: string) {
+  if (!supabase) {
+    throw new Error('Supabase auth is not configured')
+  }
+
+  const signInResult = await supabase.auth.signInWithPassword({ email, password })
+  if (signInResult.error || !signInResult.data.session) {
+    throw signInResult.error ?? new Error('Unable to create active session')
+  }
+
+  return signInResult.data.session
+}
+
 export async function signInWithGoogle() {
   if (!supabase) {
     throw new Error('Supabase auth is not configured')
