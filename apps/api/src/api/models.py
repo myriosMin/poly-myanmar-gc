@@ -111,6 +111,7 @@ class ProfileRecord(BaseModel):
     skills: list[str] | None = None
     hobbies: list[str] | None = None
     status_badges: list[str] | None = None
+    public_preferences: list[str] | None = None
     open_to_collab: bool | None = None
     job_seeking: bool | None = None
     manual_verification_notes: str | None = None
@@ -176,6 +177,7 @@ class ProfileUpdateRequest(BaseModel):
     skills: list[str] | None = None
     hobbies: list[str] | None = None
     status_badges: list[str] | None = None
+    public_preferences: list[str] | None = None
     open_to_collab: bool | None = None
     job_seeking: bool | None = None
     manual_verification_notes: str | None = None

@@ -60,6 +60,16 @@ export const publicProfileFields = [
 ] as const
 export type PublicProfileField = (typeof publicProfileFields)[number]
 
+export const alwaysPublicProfileFields = ['polytechnic', 'course', 'statusBadge', 'linkedinUrl'] as const
+
+export const defaultPublicProfileFields: PublicProfileField[] = [
+  ...alwaysPublicProfileFields,
+  'jobSeeking',
+  'email',
+  'skills',
+  'hobbies',
+]
+
 export interface Session {
   id: string
   username?: string

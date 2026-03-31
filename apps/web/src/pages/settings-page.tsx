@@ -12,13 +12,17 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
-import { publicProfileFields, studentStatuses } from '@/lib/domain'
+import {
+  alwaysPublicProfileFields,
+  defaultPublicProfileFields,
+  publicProfileFields,
+  studentStatuses,
+} from '@/lib/domain'
 import { settingsSchema, type SettingsForm } from '@/lib/schemas'
 import { signOut } from '@/lib/supabase'
 
-const alwaysPublicFields = ['polytechnic', 'course', 'statusBadge', 'linkedinUrl'] as const
 const optionalPublicFields = publicProfileFields.filter(
-  (field) => !alwaysPublicFields.includes(field as (typeof alwaysPublicFields)[number]),
+  (field) => !alwaysPublicProfileFields.includes(field as (typeof alwaysPublicProfileFields)[number]),
 )
 
 const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
@@ -39,6 +43,7 @@ export function SettingsPage() {
   const queryClient = useQueryClient()
   const [accountActionMessage, setAccountActionMessage] = useState<string | null>(null)
   const [deletionDraft, setDeletionDraft] = useState<string>('')
+  const [savedNotice, setSavedNotice] = useState(false)
   const settingsQuery = useQuery({
     queryKey: ['settings'],
     queryFn: () => api.getSettings(),
@@ -57,7 +62,7 @@ export function SettingsPage() {
       statusBadge: 'mentor',
       openToCollab: true,
       jobSeeking: false,
-      publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl', 'email', 'skills', 'hobbies'],
+      publicFields: defaultPublicProfileFields,
     },
   })
 
@@ -86,6 +91,8 @@ export function SettingsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
       await queryClient.invalidateQueries({ queryKey: ['session'] })
+      setSavedNotice(true)
+      window.setTimeout(() => setSavedNotice(false), 2000)
     },
   })
 
@@ -186,7 +193,7 @@ export function SettingsPage() {
                 statusBadge: values.statusBadge,
                 openToCollab: values.openToCollab,
                 jobSeeking: values.jobSeeking,
-                publicFields: Array.from(new Set([...alwaysPublicFields, ...values.publicFields])),
+                publicFields: Array.from(new Set([...alwaysPublicProfileFields, ...values.publicFields])),
               })
             })}
           >
@@ -288,7 +295,7 @@ export function SettingsPage() {
                 Polytechnic, Course, Status, and LinkedIn are always public. Choose the optional fields below.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {alwaysPublicFields.map((field) => (
+                {alwaysPublicProfileFields.map((field) => (
                   <Badge key={field} variant="secondary">
                     {fieldLabels[field]}
                   </Badge>
@@ -318,7 +325,7 @@ export function SettingsPage() {
             </div>
 
             <Button type="submit" className="w-full md:w-auto" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Saving...' : 'Save changes'}
+              {saveMutation.isPending ? 'Saving...' : savedNotice ? 'Saved' : 'Save changes'}
             </Button>
           </form>
         </div>
@@ -346,7 +353,7 @@ export function SettingsPage() {
             <div className="soft-divider mt-6 pt-6">
               <p className="section-kicker">Visible now</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {[...alwaysPublicFields, ...publicFields].map((field) => (
+                {[...alwaysPublicProfileFields, ...publicFields].map((field) => (
                   <Badge key={field} variant="outline">
                     {fieldLabels[field]}
                   </Badge>
