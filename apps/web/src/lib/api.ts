@@ -240,19 +240,23 @@ function toSession(profile: ApiProfile): Session {
 
   return {
     id: profile.id,
-    name: profile.name ?? 'Member',
+    username: profile.username,
+    name: profile.name ?? '',
     email: profile.email,
     role: profile.role,
     approvalState: profile.approval_status,
     polytechnic,
     course: profile.course,
+    graduationYear: profile.graduation_year,
     linkedinUrl: profile.linkedin_url,
     githubUrl: profile.github_url ?? undefined,
     portfolioUrl: profile.portfolio_url ?? undefined,
+    skills: profile.skills ?? [],
+    hobbies: profile.hobbies ?? [],
     statusBadge,
     openToCollab: profile.open_to_collab ?? false,
     jobSeeking,
-    publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl'],
+    publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl', 'email', 'skills', 'hobbies'],
   }
 }
 
@@ -830,9 +834,12 @@ export const api = {
     if (update.name !== undefined) payload.name = update.name
     if (update.polytechnic !== undefined) payload.polytechnic = update.polytechnic
     if (update.course !== undefined) payload.course = update.course
+    if (update.graduationYear !== undefined) payload.graduation_year = update.graduationYear
     if (update.linkedinUrl !== undefined) payload.linkedin_url = update.linkedinUrl
     if (update.githubUrl !== undefined) payload.github_url = update.githubUrl || null
     if (update.portfolioUrl !== undefined) payload.portfolio_url = update.portfolioUrl || null
+    if (update.skills !== undefined) payload.skills = update.skills
+    if (update.hobbies !== undefined) payload.hobbies = update.hobbies
     if (update.openToCollab !== undefined) payload.open_to_collab = update.openToCollab
     if (update.jobSeeking !== undefined) payload.job_seeking = update.jobSeeking
     if (update.statusBadge !== undefined) payload.status_badges = [update.statusBadge]
