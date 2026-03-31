@@ -210,7 +210,7 @@ export function LegalPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow={page.eyebrow}
         title={page.title}
@@ -218,7 +218,7 @@ export function LegalPage() {
         actions={<Badge variant="outline">Private member platform</Badge>}
       />
 
-      <div className="surface-panel bg-card/88 p-8">
+      <div className="surface-panel bg-card/88 p-4 sm:p-6 lg:p-8">
         <ReactMarkdown
           components={{
             h1: (props) => <h1 className="font-display text-2xl font-semibold tracking-[-0.02em]" {...props} />,

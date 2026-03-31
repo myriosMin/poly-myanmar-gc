@@ -41,14 +41,14 @@ export function MobileDrawer({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-background/88 p-4 backdrop-blur-xl lg:hidden">
+    <div className="fixed inset-0 z-50 bg-background/88 p-3 backdrop-blur-xl sm:p-4 lg:hidden">
       <button
         type="button"
         className="absolute inset-0"
         aria-label="Close panel"
         onClick={onClose}
       />
-      <div className="relative max-h-[calc(100vh-2rem)] overflow-y-auto">{children}</div>
+      <div className="relative max-h-[calc(100vh-1.5rem)] overflow-y-auto pb-2 sm:max-h-[calc(100vh-2rem)]">{children}</div>
     </div>,
     document.body,
   )
@@ -85,7 +85,7 @@ export function FullscreenModal({
         <div className="modal-header">
           <div>
             <p className="section-kicker">{eyebrow}</p>
-            <p className="mt-2 font-display text-3xl font-semibold">{title}</p>
+            <p className="mt-2 font-display text-2xl font-semibold sm:text-3xl">{title}</p>
           </div>
           <Button type="button" variant="outline" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
