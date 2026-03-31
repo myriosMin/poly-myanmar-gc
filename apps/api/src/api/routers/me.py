@@ -1,15 +1,28 @@
 from __future__ import annotations
 
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from postgrest.exceptions import APIError
 
 from ..deps import AuthenticatedUser, get_actor, get_authenticated_user, get_store
-from ..models import ApprovalState, MeResponse, OnboardingSubmitRequest, ProfileRecord, ReviewObjectType
+from ..models import (
+    ApprovalState,
+    DeletionRequestSubmitRequest,
+    DeletionRequestSubmitResponse,
+    FlagRecord,
+    FlagStatus,
+    MeResponse,
+    OnboardingSubmitRequest,
+    ProfileRecord,
+    ReviewObjectType,
+)
 from ..settings import get_settings
 from ..store_protocol import StoreProtocol
 from ..supabase_client import get_supabase_client
 
 router = APIRouter(tags=["me"])
+ACCOUNT_DELETION_SUBJECT_TYPE = "account_deletion_request"
 
 
 def _upsert_onboarding_supabase(payload: OnboardingSubmitRequest) -> ProfileRecord | None:
@@ -120,3 +133,47 @@ def submit_onboarding(
     persisted_profile = _upsert_onboarding_supabase(payload)
     in_memory_profile = store.upsert_onboarding(payload)
     return persisted_profile or in_memory_profile
+
+
+@router.post("/me/deletion-request", response_model=DeletionRequestSubmitResponse)
+def submit_deletion_request(
+    payload: DeletionRequestSubmitRequest,
+    actor: ProfileRecord = Depends(get_actor),
+    store: StoreProtocol = Depends(get_store),
+) -> DeletionRequestSubmitResponse:
+    open_flags = store.list_flags(page=1, page_size=5000, status=FlagStatus.open)
+    for flag in open_flags.items:
+        if str(flag.subject_type) == ACCOUNT_DELETION_SUBJECT_TYPE and flag.subject_id == actor.id:
+            return DeletionRequestSubmitResponse(
+                request_id=flag.id,
+                status=flag.status,
+                already_exists=True,
+                message="An open deletion request already exists and is awaiting admin review.",
+            )
+
+    details = (payload.request_details or "Please delete my account and associated profile data.").strip()
+    reason = "\n".join(
+        [
+            "Account and data deletion request",
+            f"Full name: {actor.name or '(missing in profile)'}",
+            f"Google sign-in email: {actor.email}",
+            f"LinkedIn URL: {actor.linkedin_url}",
+            f"Request details: {details}",
+        ]
+    )
+
+    request_flag = FlagRecord(
+        id=uuid4(),
+        subject_type=ACCOUNT_DELETION_SUBJECT_TYPE,
+        subject_id=actor.id,
+        severity="medium",
+        reason=reason,
+        status=FlagStatus.open,
+    )
+    stored_flag = store.store_flag(request_flag)
+    return DeletionRequestSubmitResponse(
+        request_id=stored_flag.id,
+        status=stored_flag.status,
+        already_exists=False,
+        message="Deletion request submitted. Admins will review it according to the deletion policy.",
+    )

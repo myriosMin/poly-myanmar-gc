@@ -189,6 +189,17 @@ class MeResponse(BaseModel):
     queue_access: bool
 
 
+class DeletionRequestSubmitRequest(BaseModel):
+    request_details: str | None = None
+
+
+class DeletionRequestSubmitResponse(BaseModel):
+    request_id: UUID
+    status: FlagStatus
+    already_exists: bool
+    message: str
+
+
 class ApprovalRequestRecord(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     user_id: UUID

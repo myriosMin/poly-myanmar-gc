@@ -108,12 +108,13 @@ export function SettingsPage() {
         await globalThis.navigator.clipboard.writeText(draft)
       }
 
-      return draft
+      const result = await api.requestAccountDeletion(draft)
+      return { draft, result }
     },
-    onSuccess: (draft) => {
+    onSuccess: ({ draft, result }) => {
       setDeletionDraft(draft)
-      setAccountActionMessage('Deletion request template is ready. Send it via the community admin channel or Telegram review contact.')
-      navigate('/legal/deletion')
+      const requestState = result.already_exists ? 'already open' : 'submitted'
+      setAccountActionMessage(`${result.message} Request ID: ${result.request_id} (${requestState}).`)
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : 'Unable to prepare deletion request.'
@@ -203,7 +204,7 @@ export function SettingsPage() {
                 <Eye className="h-4 w-4 text-primary" />
                 <p className="font-medium">Public profile fields</p>
               </div>
-              <p className="body-copy mt-2 !text-sm">
+              <p className="body-copy mt-2 text-sm!">
                 Choose what appears on your member profile. Keep at least one field visible.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -292,8 +293,8 @@ export function SettingsPage() {
                 </Button>
               </div>
 
-              <p className="body-copy !text-sm">
-                Deletion follows policy: requests are reviewed by admins and may retain minimal audit/moderation records.
+              <p className="body-copy text-sm!">
+                Deletion follows policy: requests are reviewed by admins and may retain minimal audit or moderation records.
               </p>
 
               {deletionDraft ? (
