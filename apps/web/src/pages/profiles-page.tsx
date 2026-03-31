@@ -19,7 +19,12 @@ import { EmptyState } from '@/components/layout/empty-state'
 import { HeaderSocialLinks } from '@/components/layout/header-social-links'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
-import { type ProfileFilters } from '@/lib/domain'
+import {
+  alwaysPublicProfileFields,
+  defaultPublicProfileFields,
+  type ProfileFilters,
+  type PublicProfileField,
+} from '@/lib/domain'
 import { useSessionQuery } from '@/lib/query'
 import { formatDate } from '@/lib/utils'
 
@@ -47,12 +52,15 @@ function ProfilePill({ label }: { label: string }) {
 
 function ProfileOverlay({
   profile,
+  visibleFields,
   onClose,
 }: {
   profile: Awaited<ReturnType<typeof api.getProfiles>>['items'][number]
+  visibleFields: PublicProfileField[]
   onClose: () => void
 }) {
   const { theme } = useTheme()
+  const canShow = (field: PublicProfileField) => visibleFields.includes(field)
 
   const socialLinks = [
     {
@@ -61,7 +69,7 @@ function ProfileOverlay({
       iconSrc: theme === 'dark' ? '/LinkedIn_dark.png' : '/LinkedIn.png',
       iconAlt: 'LinkedIn',
     },
-    profile.githubUrl
+    canShow('githubUrl') && profile.githubUrl
       ? {
           label: 'GitHub',
           href: profile.githubUrl,
@@ -69,7 +77,7 @@ function ProfileOverlay({
           iconAlt: 'GitHub',
         }
       : null,
-    profile.portfolioUrl
+    canShow('portfolioUrl') && profile.portfolioUrl
       ? {
           label: 'Portfolio',
           href: profile.portfolioUrl,
@@ -87,7 +95,7 @@ function ProfileOverlay({
 
   const statuses = [
     profile.statusBadge,
-    ...(profile.jobSeeking ? ['job seeking'] : []),
+    ...(canShow('jobSeeking') && profile.jobSeeking ? ['job seeking'] : []),
     ...(profile.openToCollab ? ['open to collab'] : []),
   ]
 
@@ -149,12 +157,14 @@ function ProfileOverlay({
                 <span className="text-muted-foreground">Joined on</span>
                 <span className="font-medium text-foreground">{formatDate(profile.joinedAt)}</span>
               </div>
-              <div className="flex items-center justify-between gap-4 py-2">
-                <span className="text-muted-foreground">Email</span>
-                <span className="truncate text-right font-medium text-foreground">
-                  {profile.gmail}
-                </span>
-              </div>
+              {canShow('email') ? (
+                <div className="flex items-center justify-between gap-4 py-2">
+                  <span className="text-muted-foreground">Email</span>
+                  <span className="truncate text-right font-medium text-foreground">
+                    {profile.gmail}
+                  </span>
+                </div>
+              ) : null}
             </div>
           </aside>
 
@@ -195,29 +205,35 @@ function ProfileOverlay({
               <p className="mt-4 max-w-3xl text-sm text-foreground">{profile.bio}</p>
             </section>
 
-            <section className="grid gap-4 xl:grid-cols-2">
-              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
-                <p className="section-kicker">Skills</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {profile.skills.map((skill) => (
-                    <Badge key={skill} variant="outline">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+            {canShow('skills') || canShow('hobbies') ? (
+              <section className="grid gap-4 xl:grid-cols-2">
+                {canShow('skills') ? (
+                  <div className="surface-panel rounded-[2rem] p-6 md:p-7">
+                    <p className="section-kicker">Skills</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {profile.skills.map((skill) => (
+                        <Badge key={skill} variant="outline">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
-              <div className="surface-panel rounded-[2rem] p-6 md:p-7">
-                <p className="section-kicker">Hobbies</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {profile.hobbies.map((hobby) => (
-                    <Badge key={hobby} variant="outline">
-                      {hobby}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </section>
+                {canShow('hobbies') ? (
+                  <div className="surface-panel rounded-[2rem] p-6 md:p-7">
+                    <p className="section-kicker">Hobbies</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {profile.hobbies.map((hobby) => (
+                        <Badge key={hobby} variant="outline">
+                          {hobby}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
 
             <section className="surface-panel rounded-[2rem] p-6 md:p-7">
               <p className="section-kicker">Activity</p>
@@ -415,6 +431,18 @@ export function ProfilesPage() {
   })
 
   const selectedProfile = selectedProfileQuery.data ?? selectedProfileFromList
+  const selectedProfileVisibleFields = useMemo<PublicProfileField[]>(() => {
+    const baseline = defaultPublicProfileFields
+    if (!selectedProfile || !session) {
+      return baseline
+    }
+
+    if (selectedProfile.id === session.id) {
+      return Array.from(new Set<PublicProfileField>([...alwaysPublicProfileFields, ...session.publicFields]))
+    }
+
+    return baseline
+  }, [selectedProfile, session])
 
   const resetFilters = () => {
     setSearchDraft('')
@@ -746,14 +774,19 @@ export function ProfilesPage() {
                           </div>
                         </div>
 
-                        <div className="relative shrink-0">
+                        <button
+                          type="button"
+                          className="relative shrink-0"
+                          onClick={() => setSelectedProfileId(profile.id)}
+                          aria-label={`View ${profile.name} profile`}
+                        >
                           <img
                             src={profile.avatarUrl}
                             alt={profile.name}
                             className="h-24 w-24 rounded-full border-[2px] border-border object-cover md:h-36 md:w-36"
                           />
                           <ArrowUpRight className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-card text-muted-foreground" />
-                        </div>
+                        </button>
                       </div>
 
                       <div className="flex items-end justify-between gap-4">
@@ -762,13 +795,6 @@ export function ProfilesPage() {
                           {profile.jobSeeking ? 'OPEN TO WORK' : 'SETTLED'}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedProfileId(profile.id)}
-                          >
-                            View
-                          </Button>
                           {isSuperadmin ? (
                             <Button
                               size="sm"
@@ -850,7 +876,11 @@ export function ProfilesPage() {
         : null}
 
       {selectedProfile ? (
-        <ProfileOverlay profile={selectedProfile} onClose={() => setSelectedProfileId(null)} />
+        <ProfileOverlay
+          profile={selectedProfile}
+          visibleFields={selectedProfileVisibleFields}
+          onClose={() => setSelectedProfileId(null)}
+        />
       ) : null}
     </div>
   )

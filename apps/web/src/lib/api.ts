@@ -11,11 +11,12 @@ import type {
   EventItem,
   OnboardingInput,
   ProfileFilters,
+  PublicProfileField,
   ResourceItem,
   ResourceSubmissionInput,
   Session,
 } from '@/lib/domain'
-import { collabTypes, eventKinds, polytechnics, studentStatuses } from '@/lib/domain'
+import { collabTypes, defaultPublicProfileFields, eventKinds, polytechnics, publicProfileFields, studentStatuses } from '@/lib/domain'
 import { getAccessToken, getAuthenticatedUser } from '@/lib/supabase'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -62,6 +63,7 @@ type ApiProfile = {
   skills: string[] | null
   hobbies: string[] | null
   status_badges: string[] | null
+  public_preferences: string[] | null
   open_to_collab: boolean | null
   job_seeking: boolean | null
   created_at: string
@@ -204,6 +206,15 @@ function normalizeEventKind(value: string): string {
   return value.replace(/_/g, ' ')
 }
 
+function normalizePublicFields(fields: string[] | null | undefined): PublicProfileField[] {
+  if (!fields?.length) {
+    return defaultPublicProfileFields
+  }
+  const allowed = new Set<string>(publicProfileFields)
+  const normalized = fields.filter((field): field is PublicProfileField => allowed.has(field))
+  return normalized.length ? normalized : defaultPublicProfileFields
+}
+
 function createAvatar(seed: string): string {
   const [a = 'A', b = 'M'] = seed
     .split(' ')
@@ -256,7 +267,7 @@ function toSession(profile: ApiProfile): Session {
     statusBadge,
     openToCollab: profile.open_to_collab ?? false,
     jobSeeking,
-    publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl', 'email', 'skills', 'hobbies'],
+    publicFields: normalizePublicFields(profile.public_preferences),
   }
 }
 
@@ -843,6 +854,7 @@ export const api = {
     if (update.openToCollab !== undefined) payload.open_to_collab = update.openToCollab
     if (update.jobSeeking !== undefined) payload.job_seeking = update.jobSeeking
     if (update.statusBadge !== undefined) payload.status_badges = [update.statusBadge]
+    if (update.publicFields !== undefined) payload.public_preferences = update.publicFields
 
     const updated = await request<ApiProfile>('/profiles/me', {
       method: 'PATCH',

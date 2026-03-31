@@ -268,7 +268,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
               <p className="section-kicker">Graduate Club</p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <p className="font-display text-3xl font-semibold">Poly Myanmar</p>
-                <Badge variant="outline">Private member access</Badge>
+                <Badge variant="outline">Private access</Badge>
               </div>
             </div>
             <div className="flex items-center gap-2">
