@@ -38,6 +38,13 @@ type ApiMeResponse = {
   queue_access: boolean
 }
 
+type ApiDeletionRequestResponse = {
+  request_id: string
+  status: string
+  already_exists: boolean
+  message: string
+}
+
 type ApiProfile = {
   id: string
   username: string
@@ -735,11 +742,18 @@ export const api = {
       ...flags.items.map((item) => ({
         id: item.id,
         type: 'collab_flag' as const,
-        title: `Flag (${item.severity})`,
+        title:
+          item.subject_type === 'account_deletion_request'
+            ? 'Account deletion request'
+            : `Flag (${item.severity})`,
         summary: item.reason,
-        submittedBy: 'system',
+        submittedBy:
+          item.subject_type === 'account_deletion_request' ? item.subject_id : 'system',
         createdAt: item.created_at,
-        actions: ['ban'] as ModerationAction[],
+        actions:
+          item.subject_type === 'account_deletion_request'
+            ? (['dismiss_flag'] as ModerationAction[])
+            : (['ban'] as ModerationAction[]),
       })),
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
@@ -788,6 +802,10 @@ export const api = {
       return request(`/admin/event-drafts/${id}/${suffix}`, { method: 'POST' })
     }
 
+    if (type === 'collab_flag' && action === 'dismiss_flag') {
+      return request(`/admin/flags/${id}/dismiss`, { method: 'POST' })
+    }
+
     if (type === 'collab_flag' && action === 'ban') {
       const subjectId = FLAG_SUBJECTS.get(id)
       if (!subjectId) {
@@ -824,5 +842,12 @@ export const api = {
       body: JSON.stringify(payload),
     })
     return toSession(updated)
+  },
+
+  async requestAccountDeletion(requestDetails: string) {
+    return request<ApiDeletionRequestResponse>('/me/deletion-request', {
+      method: 'POST',
+      body: JSON.stringify({ request_details: requestDetails }),
+    })
   },
 }
