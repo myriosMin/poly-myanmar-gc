@@ -1,18 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { Eye, UserCog } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Eye, LogOut, Trash2, UserCog } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
 import { publicProfileFields, studentStatuses } from '@/lib/domain'
 import { settingsSchema, type SettingsForm } from '@/lib/schemas'
+import { signOut } from '@/lib/supabase'
 
 const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
   polytechnic: 'Polytechnic',
@@ -25,7 +28,10 @@ const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
 }
 
 export function SettingsPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [accountActionMessage, setAccountActionMessage] = useState<string | null>(null)
+  const [deletionDraft, setDeletionDraft] = useState<string>('')
   const settingsQuery = useQuery({
     queryKey: ['settings'],
     queryFn: () => api.getSettings(),
@@ -67,6 +73,51 @@ export function SettingsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
       await queryClient.invalidateQueries({ queryKey: ['session'] })
+    },
+  })
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await signOut()
+      globalThis.localStorage.removeItem('actor-id')
+      globalThis.localStorage.removeItem('onboarding-draft')
+    },
+    onSuccess: async () => {
+      await queryClient.cancelQueries()
+      queryClient.clear()
+      navigate('/auth', { replace: true })
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Unable to log out right now.'
+      setAccountActionMessage(message)
+    },
+  })
+
+  const deleteRequestMutation = useMutation({
+    mutationFn: async () => {
+      const settings = settingsQuery.data ?? await api.getSettings()
+      const draft = [
+        'Deletion request',
+        `Full name: ${settings.name || '(please fill)'}`,
+        `Google sign-in email: ${settings.email}`,
+        `LinkedIn URL: ${settings.linkedinUrl || '(please fill)'}`,
+        'Request: Please delete my account and associated profile data.',
+      ].join('\n')
+
+      if (globalThis.navigator?.clipboard?.writeText) {
+        await globalThis.navigator.clipboard.writeText(draft)
+      }
+
+      return draft
+    },
+    onSuccess: (draft) => {
+      setDeletionDraft(draft)
+      setAccountActionMessage('Deletion request template is ready. Send it via the community admin channel or Telegram review contact.')
+      navigate('/legal/deletion')
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Unable to prepare deletion request.'
+      setAccountActionMessage(message)
     },
   })
 
@@ -216,6 +267,45 @@ export function SettingsPage() {
                   </Badge>
                 ))}
               </div>
+            </div>
+
+            <div className="soft-divider mt-6 space-y-4 pt-6">
+              <p className="section-kicker">Account actions</p>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending || deleteRequestMutation.isPending}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => deleteRequestMutation.mutate()}
+                  disabled={logoutMutation.isPending || deleteRequestMutation.isPending || settingsQuery.isLoading}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteRequestMutation.isPending ? 'Preparing request...' : 'Delete account'}
+                </Button>
+              </div>
+
+              <p className="body-copy !text-sm">
+                Deletion follows policy: requests are reviewed by admins and may retain minimal audit/moderation records.
+              </p>
+
+              {deletionDraft ? (
+                <div className="space-y-2">
+                  <Label>Deletion request template</Label>
+                  <Textarea value={deletionDraft} readOnly />
+                </div>
+              ) : null}
+
+              {accountActionMessage ? (
+                <p className="text-sm text-muted-foreground">{accountActionMessage}</p>
+              ) : null}
             </div>
           </div>
         </div>
