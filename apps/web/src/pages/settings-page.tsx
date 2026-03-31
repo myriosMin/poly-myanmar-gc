@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/layout/page-header'
@@ -17,12 +16,20 @@ import { publicProfileFields, studentStatuses } from '@/lib/domain'
 import { settingsSchema, type SettingsForm } from '@/lib/schemas'
 import { signOut } from '@/lib/supabase'
 
+const alwaysPublicFields = ['polytechnic', 'course', 'statusBadge', 'linkedinUrl'] as const
+const optionalPublicFields = publicProfileFields.filter(
+  (field) => !alwaysPublicFields.includes(field as (typeof alwaysPublicFields)[number]),
+)
+
 const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
   polytechnic: 'Polytechnic',
   course: 'Course',
   statusBadge: 'Status',
   jobSeeking: 'Job-seeking status',
   linkedinUrl: 'LinkedIn',
+  email: 'Email',
+  skills: 'Skills',
+  hobbies: 'Hobbies',
   githubUrl: 'GitHub',
   portfolioUrl: 'Portfolio',
 }
@@ -41,13 +48,16 @@ export function SettingsPage() {
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       name: '',
-      linkedinUrl: 'https://linkedin.com/in/',
+      graduationYearInput: '',
+      linkedinUrl: '',
       githubUrl: '',
       portfolioUrl: '',
+      skillsInput: '',
+      hobbiesInput: '',
       statusBadge: 'mentor',
       openToCollab: true,
       jobSeeking: false,
-      publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl'],
+      publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl', 'email', 'skills', 'hobbies'],
     },
   })
 
@@ -57,10 +67,13 @@ export function SettingsPage() {
     }
 
     form.reset({
-      name: settingsQuery.data.name,
-      linkedinUrl: settingsQuery.data.linkedinUrl ?? 'https://linkedin.com/in/min-thu',
+      name: settingsQuery.data.name ?? '',
+      graduationYearInput: settingsQuery.data.graduationYear ? String(settingsQuery.data.graduationYear) : '',
+      linkedinUrl: settingsQuery.data.linkedinUrl ?? '',
       githubUrl: settingsQuery.data.githubUrl ?? '',
       portfolioUrl: settingsQuery.data.portfolioUrl ?? '',
+      skillsInput: settingsQuery.data.skills.join(', '),
+      hobbiesInput: settingsQuery.data.hobbies.join(', '),
       statusBadge: settingsQuery.data.statusBadge,
       openToCollab: settingsQuery.data.openToCollab,
       jobSeeking: settingsQuery.data.jobSeeking,
@@ -151,38 +164,105 @@ export function SettingsPage() {
 
           <form
             className="mt-6 grid gap-4"
-            onSubmit={form.handleSubmit((values) => saveMutation.mutate(values))}
+            onSubmit={form.handleSubmit((values) => {
+              const parseTags = (value: string | undefined) =>
+                (value ?? '')
+                  .split(',')
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+
+              const graduationYear = values.graduationYearInput?.trim()
+                ? Number(values.graduationYearInput)
+                : null
+
+              saveMutation.mutate({
+                name: values.name,
+                graduationYear: Number.isFinite(graduationYear) ? graduationYear : null,
+                linkedinUrl: values.linkedinUrl,
+                githubUrl: values.githubUrl || undefined,
+                portfolioUrl: values.portfolioUrl || undefined,
+                skills: parseTags(values.skillsInput),
+                hobbies: parseTags(values.hobbiesInput),
+                statusBadge: values.statusBadge,
+                openToCollab: values.openToCollab,
+                jobSeeking: values.jobSeeking,
+                publicFields: Array.from(new Set([...alwaysPublicFields, ...values.publicFields])),
+              })
+            })}
           >
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input {...form.register('name')} />
+              <Label>Display Name</Label>
+              <Input value={settingsQuery.data?.username ?? ''} disabled readOnly />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={settingsQuery.data?.email ?? ''} disabled readOnly />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input {...form.register('name')} placeholder="Enter your full name" />
+            </div>
+
+            <div className="surface-inset grid gap-4 p-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Polytechnic</Label>
+                <Input value={settingsQuery.data?.polytechnic ?? ''} disabled readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Course</Label>
+                <Input value={settingsQuery.data?.course ?? ''} disabled readOnly />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Graduation year</Label>
+              <Input type="number" {...form.register('graduationYearInput')} placeholder="2026" />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>LinkedIn</Label>
-                <Input {...form.register('linkedinUrl')} />
+                <Input {...form.register('linkedinUrl')} placeholder="https://linkedin.com/in/your-handle" />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select {...form.register('statusBadge')}>
+                <div className="flex flex-wrap gap-2">
                   {studentStatuses.map((status) => (
-                    <option key={status} value={status}>
+                    <Button
+                      key={status}
+                      type="button"
+                      size="sm"
+                      variant={form.watch('statusBadge') === status ? 'default' : 'outline'}
+                      onClick={() => form.setValue('statusBadge', status, { shouldValidate: true })}
+                    >
                       {status}
-                    </option>
+                    </Button>
                   ))}
-                </Select>
+                </div>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>GitHub</Label>
-                <Input {...form.register('githubUrl')} />
+                <Input {...form.register('githubUrl')} placeholder="https://github.com/your-handle" />
               </div>
               <div className="space-y-2">
                 <Label>Portfolio</Label>
-                <Input {...form.register('portfolioUrl')} />
+                <Input {...form.register('portfolioUrl')} placeholder="https://your-site.com" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Skills</Label>
+                <Input {...form.register('skillsInput')} placeholder="react, python, design" />
+              </div>
+              <div className="space-y-2">
+                <Label>Hobbies</Label>
+                <Input {...form.register('hobbiesInput')} placeholder="photography, football" />
               </div>
             </div>
 
@@ -205,10 +285,17 @@ export function SettingsPage() {
                 <p className="font-medium">Public profile fields</p>
               </div>
               <p className="body-copy mt-2 text-sm!">
-                Choose what appears on your member profile. Keep at least one field visible.
+                Polytechnic, Course, Status, and LinkedIn are always public. Choose the optional fields below.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {publicProfileFields.map((field) => {
+                {alwaysPublicFields.map((field) => (
+                  <Badge key={field} variant="secondary">
+                    {fieldLabels[field]}
+                  </Badge>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {optionalPublicFields.map((field) => {
                   const active = publicFields.includes(field)
                   return (
                     <Button
@@ -220,10 +307,7 @@ export function SettingsPage() {
                         const next = active
                           ? publicFields.filter((item) => item !== field)
                           : [...publicFields, field]
-
-                        if (next.length > 0) {
-                          form.setValue('publicFields', next, { shouldValidate: true })
-                        }
+                        form.setValue('publicFields', next, { shouldValidate: true })
                       }}
                     >
                       {fieldLabels[field]}
@@ -262,7 +346,7 @@ export function SettingsPage() {
             <div className="soft-divider mt-6 pt-6">
               <p className="section-kicker">Visible now</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {publicFields.map((field) => (
+                {[...alwaysPublicFields, ...publicFields].map((field) => (
                   <Badge key={field} variant="outline">
                     {fieldLabels[field]}
                   </Badge>

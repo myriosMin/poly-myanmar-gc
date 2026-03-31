@@ -52,6 +52,9 @@ export const publicProfileFields = [
   'statusBadge',
   'jobSeeking',
   'linkedinUrl',
+  'email',
+  'skills',
+  'hobbies',
   'githubUrl',
   'portfolioUrl',
 ] as const
@@ -59,15 +62,19 @@ export type PublicProfileField = (typeof publicProfileFields)[number]
 
 export interface Session {
   id: string
+  username?: string
   name: string
   email: string
   role: Role
   approvalState: ApprovalState
   polytechnic: Polytechnic | null
   course: string | null
+  graduationYear: number | null
   linkedinUrl?: string
   githubUrl?: string
   portfolioUrl?: string
+  skills: string[]
+  hobbies: string[]
   statusBadge: StudentStatus
   openToCollab: boolean
   jobSeeking: boolean

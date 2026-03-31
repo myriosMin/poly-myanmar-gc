@@ -32,9 +32,12 @@ export const collabCreateSchema = z.object({
 
 export const settingsSchema = z.object({
   name: z.string().min(2),
+  graduationYearInput: z.string().optional().default(''),
   linkedinUrl: z.url(),
   githubUrl: z.string().url().optional().or(z.literal('')),
   portfolioUrl: z.string().url().optional().or(z.literal('')),
+  skillsInput: z.string().optional().default(''),
+  hobbiesInput: z.string().optional().default(''),
   statusBadge: z.enum(studentStatuses),
   openToCollab: z.boolean(),
   jobSeeking: z.boolean(),
