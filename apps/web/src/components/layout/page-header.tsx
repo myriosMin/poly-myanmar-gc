@@ -19,7 +19,7 @@ export function PageHeader({
   return (
     <section
       className={cn(
-        'page-reveal page-stack grid border-b border-border/50 pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end',
+        'page-reveal page-stack grid gap-4 border-b border-border/50 pb-4 sm:pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end',
         className,
       )}
     >
@@ -28,7 +28,7 @@ export function PageHeader({
         <h1 className="page-title mt-4 max-w-2xl">{title}</h1>
         <p className="body-copy mt-3 max-w-xl">{description}</p>
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2 lg:justify-end">{actions}</div> : null}
+      {actions ? <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">{actions}</div> : null}
     </section>
   )
 }

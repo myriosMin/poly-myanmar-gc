@@ -36,6 +36,7 @@ from .models import (
     RsvpStatus,
     ReviewObjectType,
     TelegramActionTokenRecord,
+    TelegramTokenSweepResponse,
     TelegramWebhookRequest,
     TelegramWebhookResponse,
     QueueCounts,
@@ -840,11 +841,28 @@ class InMemoryStore:
             )
 
     def sweep_expired_tokens(self) -> int:
+        details = self.sweep_expired_tokens_detailed()
+        return details.total_removed
+
+    def sweep_expired_tokens_detailed(self) -> TelegramTokenSweepResponse:
         with self._lock:
-            expired = [token_id for token_id, token in self.telegram_action_tokens.items() if token.expires_at < _now() or token.consumed_at is not None]
-            for token_id in expired:
+            consumed = [
+                token_id
+                for token_id, token in self.telegram_action_tokens.items()
+                if token.consumed_at is not None
+            ]
+            expired = [
+                token_id
+                for token_id, token in self.telegram_action_tokens.items()
+                if token.consumed_at is None and token.expires_at < _now()
+            ]
+            for token_id in consumed + expired:
                 del self.telegram_action_tokens[token_id]
-            return len(expired)
+            return TelegramTokenSweepResponse(
+                consumed_removed=len(consumed),
+                expired_removed=len(expired),
+                total_removed=len(consumed) + len(expired),
+            )
 
     def detect_suspicious_activity(self) -> list[FlagRecord]:
         with self._lock:

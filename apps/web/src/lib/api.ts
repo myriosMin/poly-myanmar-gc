@@ -11,11 +11,12 @@ import type {
   EventItem,
   OnboardingInput,
   ProfileFilters,
+  PublicProfileField,
   ResourceItem,
   ResourceSubmissionInput,
   Session,
 } from '@/lib/domain'
-import { collabTypes, eventKinds, polytechnics, studentStatuses } from '@/lib/domain'
+import { collabTypes, defaultPublicProfileFields, eventKinds, polytechnics, publicProfileFields, studentStatuses } from '@/lib/domain'
 import { getAccessToken, getAuthenticatedUser } from '@/lib/supabase'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -38,6 +39,13 @@ type ApiMeResponse = {
   queue_access: boolean
 }
 
+type ApiDeletionRequestResponse = {
+  request_id: string
+  status: string
+  already_exists: boolean
+  message: string
+}
+
 type ApiProfile = {
   id: string
   username: string
@@ -55,6 +63,7 @@ type ApiProfile = {
   skills: string[] | null
   hobbies: string[] | null
   status_badges: string[] | null
+  public_preferences: string[] | null
   open_to_collab: boolean | null
   job_seeking: boolean | null
   created_at: string
@@ -197,6 +206,15 @@ function normalizeEventKind(value: string): string {
   return value.replace(/_/g, ' ')
 }
 
+function normalizePublicFields(fields: string[] | null | undefined): PublicProfileField[] {
+  if (!fields?.length) {
+    return defaultPublicProfileFields
+  }
+  const allowed = new Set<string>(publicProfileFields)
+  const normalized = fields.filter((field): field is PublicProfileField => allowed.has(field))
+  return normalized.length ? normalized : defaultPublicProfileFields
+}
+
 function createAvatar(seed: string): string {
   const [a = 'A', b = 'M'] = seed
     .split(' ')
@@ -233,19 +251,23 @@ function toSession(profile: ApiProfile): Session {
 
   return {
     id: profile.id,
-    name: profile.name ?? 'Member',
+    username: profile.username,
+    name: profile.name ?? '',
     email: profile.email,
     role: profile.role,
     approvalState: profile.approval_status,
     polytechnic,
     course: profile.course,
+    graduationYear: profile.graduation_year,
     linkedinUrl: profile.linkedin_url,
     githubUrl: profile.github_url ?? undefined,
     portfolioUrl: profile.portfolio_url ?? undefined,
+    skills: profile.skills ?? [],
+    hobbies: profile.hobbies ?? [],
     statusBadge,
     openToCollab: profile.open_to_collab ?? false,
     jobSeeking,
-    publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl'],
+    publicFields: normalizePublicFields(profile.public_preferences),
   }
 }
 
@@ -735,11 +757,18 @@ export const api = {
       ...flags.items.map((item) => ({
         id: item.id,
         type: 'collab_flag' as const,
-        title: `Flag (${item.severity})`,
+        title:
+          item.subject_type === 'account_deletion_request'
+            ? 'Account deletion request'
+            : `Flag (${item.severity})`,
         summary: item.reason,
-        submittedBy: 'system',
+        submittedBy:
+          item.subject_type === 'account_deletion_request' ? item.subject_id : 'system',
         createdAt: item.created_at,
-        actions: ['ban'] as ModerationAction[],
+        actions:
+          item.subject_type === 'account_deletion_request'
+            ? (['dismiss_flag'] as ModerationAction[])
+            : (['ban'] as ModerationAction[]),
       })),
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
@@ -788,6 +817,10 @@ export const api = {
       return request(`/admin/event-drafts/${id}/${suffix}`, { method: 'POST' })
     }
 
+    if (type === 'collab_flag' && action === 'dismiss_flag') {
+      return request(`/admin/flags/${id}/dismiss`, { method: 'POST' })
+    }
+
     if (type === 'collab_flag' && action === 'ban') {
       const subjectId = FLAG_SUBJECTS.get(id)
       if (!subjectId) {
@@ -812,17 +845,28 @@ export const api = {
     if (update.name !== undefined) payload.name = update.name
     if (update.polytechnic !== undefined) payload.polytechnic = update.polytechnic
     if (update.course !== undefined) payload.course = update.course
+    if (update.graduationYear !== undefined) payload.graduation_year = update.graduationYear
     if (update.linkedinUrl !== undefined) payload.linkedin_url = update.linkedinUrl
     if (update.githubUrl !== undefined) payload.github_url = update.githubUrl || null
     if (update.portfolioUrl !== undefined) payload.portfolio_url = update.portfolioUrl || null
+    if (update.skills !== undefined) payload.skills = update.skills
+    if (update.hobbies !== undefined) payload.hobbies = update.hobbies
     if (update.openToCollab !== undefined) payload.open_to_collab = update.openToCollab
     if (update.jobSeeking !== undefined) payload.job_seeking = update.jobSeeking
     if (update.statusBadge !== undefined) payload.status_badges = [update.statusBadge]
+    if (update.publicFields !== undefined) payload.public_preferences = update.publicFields
 
     const updated = await request<ApiProfile>('/profiles/me', {
       method: 'PATCH',
       body: JSON.stringify(payload),
     })
     return toSession(updated)
+  },
+
+  async requestAccountDeletion(requestDetails: string) {
+    return request<ApiDeletionRequestResponse>('/me/deletion-request', {
+      method: 'POST',
+      body: JSON.stringify({ request_details: requestDetails }),
+    })
   },
 }

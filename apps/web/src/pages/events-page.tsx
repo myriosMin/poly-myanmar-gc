@@ -146,7 +146,7 @@ export function EventsPage() {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Events"
         title="See the right event, decide quickly, and RSVP."
@@ -154,13 +154,13 @@ export function EventsPage() {
         actions={
           <>
             <HeaderSocialLinks />
-            <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+            <Badge variant="outline" className="h-10 px-3 text-xs normal-case tracking-[0.1em] sm:h-11 sm:px-4 sm:text-sm sm:tracking-[0.14em]">
               {filteredEvents.length} visible
             </Badge>
             <Button
               type="button"
               variant="outline"
-              className="h-11 px-4 lg:hidden"
+              className="h-10 px-3 text-xs sm:h-11 sm:px-4 sm:text-sm lg:hidden"
               onClick={() => setShowMobileSidebar(true)}
             >
               <Filter className="h-3.5 w-3.5" />
@@ -170,7 +170,7 @@ export function EventsPage() {
               type="button"
               variant="outline"
               size="icon"
-              className="h-11 w-11"
+              className="h-10 w-10 sm:h-11 sm:w-11"
               onClick={() => void refreshEvents()}
               disabled={eventsQuery.isFetching}
               title="Refresh events"
@@ -181,7 +181,7 @@ export function EventsPage() {
         }
       />
 
-      <section className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-5">
         <aside className="hidden lg:block">{sidebar}</aside>
 
         <div className="space-y-4">
@@ -239,7 +239,7 @@ export function EventsPage() {
                       <Badge variant="secondary">{event.kind}</Badge>
                       <Badge variant="outline">{event.source}</Badge>
                     </div>
-                    <h2 className="mt-4 max-w-2xl font-display text-4xl font-semibold">
+                    <h2 className="mt-4 max-w-2xl font-display text-2xl font-semibold sm:text-3xl lg:text-4xl">
                       {event.title}
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
@@ -247,7 +247,7 @@ export function EventsPage() {
                     </p>
                   </div>
 
-                  <div className="meta-block text-right">
+                  <div className="meta-block text-left sm:text-right">
                     <p className="section-kicker">Your RSVP</p>
                     <p className="mt-2 text-sm font-medium capitalize">
                       {event.myRsvp.replace('_', ' ')}

@@ -56,7 +56,7 @@ function CollabModal({
                 <Label>Description</Label>
                 <Textarea {...form.register('description')} rows={4} />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                 <div className="space-y-2">
                   <Label>Needed roles</Label>
                   <Input {...form.register('neededRoles')} />
@@ -66,7 +66,7 @@ function CollabModal({
                   <Input {...form.register('neededSkills')} />
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                 <div className="space-y-2">
                   <Label>Deadline</Label>
                   <Input type="date" {...form.register('deadline')} />
@@ -267,7 +267,7 @@ export function CollabPage() {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Collab"
         title="Start with the right brief, then let people opt in."
@@ -275,10 +275,10 @@ export function CollabPage() {
         actions={
           <>
             <HeaderSocialLinks />
-            <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+            <Badge variant="outline" className="h-10 px-3 text-xs normal-case tracking-[0.1em] sm:h-11 sm:px-4 sm:text-sm sm:tracking-[0.14em]">
               {filteredProjects.length} visible
             </Badge>
-            <Button type="button" variant="outline" className="h-11 px-4 lg:hidden" onClick={() => setShowMobileSidebar(true)}>
+            <Button type="button" variant="outline" className="h-10 px-3 text-xs sm:h-11 sm:px-4 sm:text-sm lg:hidden" onClick={() => setShowMobileSidebar(true)}>
               <Filter className="h-3.5 w-3.5" />
               Filters
             </Button>
@@ -286,14 +286,14 @@ export function CollabPage() {
               type="button"
               variant="outline"
               size="icon"
-              className="h-11 w-11"
+              className="h-10 w-10 sm:h-11 sm:w-11"
               onClick={() => void refreshCollab()}
               disabled={collabQuery.isFetching}
               title="Refresh collaborations"
             >
               <RefreshCw className={cn('h-4 w-4', collabQuery.isFetching && 'animate-spin')} />
             </Button>
-            <Button type="button" className="h-11 px-4" onClick={() => setShowCreateModal(true)}>
+            <Button type="button" className="h-10 px-3 text-xs sm:h-11 sm:px-4 sm:text-sm" onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4" />
               Post collab
             </Button>
@@ -301,7 +301,7 @@ export function CollabPage() {
         }
       />
 
-      <section className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-5">
         <aside className="hidden lg:block">{sidebar}</aside>
 
         <div className="space-y-4">
@@ -358,7 +358,7 @@ export function CollabPage() {
                       <Badge variant="secondary">{project.type}</Badge>
                       <Badge variant="outline">{project.status}</Badge>
                     </div>
-                    <p className="mt-4 font-display text-3xl font-semibold">{project.title}</p>
+                    <p className="mt-4 font-display text-2xl font-semibold sm:text-3xl">{project.title}</p>
                     <p className="mt-2 text-sm text-muted-foreground">{project.description}</p>
                   </div>
                   <div className="meta-block">

@@ -23,6 +23,44 @@ function requiresProfileCompletion(session: Session): boolean {
   return !session.polytechnic || !session.course?.trim()
 }
 
+function resolveSessionPath(session: Session): string {
+  if (session.approvalState !== 'approved') {
+    return '/pending-approval'
+  }
+  if (requiresProfileCompletion(session)) {
+    return '/complete-profile'
+  }
+  return '/profiles'
+}
+
+function SessionLanding() {
+  const { data: session, isLoading } = useSessionQuery()
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
+  if (!session) {
+    return <Navigate replace to="/auth" />
+  }
+
+  return <Navigate replace to={resolveSessionPath(session)} />
+}
+
+function RequireAnonymous({ children }: { children: ReactNode }) {
+  const { data: session, isLoading } = useSessionQuery()
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
+  if (session) {
+    return <Navigate replace to={resolveSessionPath(session)} />
+  }
+
+  return <>{children}</>
+}
+
 function RequireApproved({ children }: { children: ReactNode }) {
   const { data: session, isLoading } = useSessionQuery()
 
@@ -57,7 +95,7 @@ function RequirePendingApproval({ children }: { children: ReactNode }) {
   }
 
   if (session.approvalState === 'approved') {
-    return <Navigate replace to={requiresProfileCompletion(session) ? '/complete-profile' : '/profiles'} />
+    return <Navigate replace to={resolveSessionPath(session)} />
   }
 
   return <>{children}</>
@@ -103,12 +141,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate replace to="/auth" />} />
+        <Route path="/" element={<SessionLanding />} />
         <Route
           path="/auth"
           element={
             <PublicShell>
-              <AuthPage />
+              <RequireAnonymous>
+                <AuthPage />
+              </RequireAnonymous>
             </PublicShell>
           }
         />

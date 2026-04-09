@@ -1,18 +1,29 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { Eye, UserCog } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Eye, LogOut, Trash2, UserCog } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/layout/page-header'
 import { api } from '@/lib/api'
-import { publicProfileFields, studentStatuses } from '@/lib/domain'
+import {
+  alwaysPublicProfileFields,
+  defaultPublicProfileFields,
+  publicProfileFields,
+  studentStatuses,
+} from '@/lib/domain'
 import { settingsSchema, type SettingsForm } from '@/lib/schemas'
+import { signOut } from '@/lib/supabase'
+
+const optionalPublicFields = publicProfileFields.filter(
+  (field) => !alwaysPublicProfileFields.includes(field as (typeof alwaysPublicProfileFields)[number]),
+)
 
 const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
   polytechnic: 'Polytechnic',
@@ -20,12 +31,19 @@ const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
   statusBadge: 'Status',
   jobSeeking: 'Job-seeking status',
   linkedinUrl: 'LinkedIn',
+  email: 'Email',
+  skills: 'Skills',
+  hobbies: 'Hobbies',
   githubUrl: 'GitHub',
   portfolioUrl: 'Portfolio',
 }
 
 export function SettingsPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [accountActionMessage, setAccountActionMessage] = useState<string | null>(null)
+  const [deletionDraft, setDeletionDraft] = useState<string>('')
+  const [savedNotice, setSavedNotice] = useState(false)
   const settingsQuery = useQuery({
     queryKey: ['settings'],
     queryFn: () => api.getSettings(),
@@ -35,13 +53,16 @@ export function SettingsPage() {
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       name: '',
-      linkedinUrl: 'https://linkedin.com/in/',
+      graduationYearInput: '',
+      linkedinUrl: '',
       githubUrl: '',
       portfolioUrl: '',
+      skillsInput: '',
+      hobbiesInput: '',
       statusBadge: 'mentor',
       openToCollab: true,
       jobSeeking: false,
-      publicFields: ['polytechnic', 'course', 'statusBadge', 'jobSeeking', 'linkedinUrl'],
+      publicFields: defaultPublicProfileFields,
     },
   })
 
@@ -51,10 +72,13 @@ export function SettingsPage() {
     }
 
     form.reset({
-      name: settingsQuery.data.name,
-      linkedinUrl: settingsQuery.data.linkedinUrl ?? 'https://linkedin.com/in/min-thu',
+      name: settingsQuery.data.name ?? '',
+      graduationYearInput: settingsQuery.data.graduationYear ? String(settingsQuery.data.graduationYear) : '',
+      linkedinUrl: settingsQuery.data.linkedinUrl ?? '',
       githubUrl: settingsQuery.data.githubUrl ?? '',
       portfolioUrl: settingsQuery.data.portfolioUrl ?? '',
+      skillsInput: settingsQuery.data.skills.join(', '),
+      hobbiesInput: settingsQuery.data.hobbies.join(', '),
       statusBadge: settingsQuery.data.statusBadge,
       openToCollab: settingsQuery.data.openToCollab,
       jobSeeking: settingsQuery.data.jobSeeking,
@@ -67,6 +91,54 @@ export function SettingsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
       await queryClient.invalidateQueries({ queryKey: ['session'] })
+      setSavedNotice(true)
+      window.setTimeout(() => setSavedNotice(false), 2000)
+    },
+  })
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await signOut()
+      globalThis.localStorage.removeItem('actor-id')
+      globalThis.localStorage.removeItem('onboarding-draft')
+    },
+    onSuccess: async () => {
+      await queryClient.cancelQueries()
+      queryClient.clear()
+      navigate('/auth', { replace: true })
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Unable to log out right now.'
+      setAccountActionMessage(message)
+    },
+  })
+
+  const deleteRequestMutation = useMutation({
+    mutationFn: async () => {
+      const settings = settingsQuery.data ?? await api.getSettings()
+      const draft = [
+        'Deletion request',
+        `Full name: ${settings.name || '(please fill)'}`,
+        `Google sign-in email: ${settings.email}`,
+        `LinkedIn URL: ${settings.linkedinUrl || '(please fill)'}`,
+        'Request: Please delete my account and associated profile data.',
+      ].join('\n')
+
+      if (globalThis.navigator?.clipboard?.writeText) {
+        await globalThis.navigator.clipboard.writeText(draft)
+      }
+
+      const result = await api.requestAccountDeletion(draft)
+      return { draft, result }
+    },
+    onSuccess: ({ draft, result }) => {
+      setDeletionDraft(draft)
+      const requestState = result.already_exists ? 'already open' : 'submitted'
+      setAccountActionMessage(`${result.message} Request ID: ${result.request_id} (${requestState}).`)
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Unable to prepare deletion request.'
+      setAccountActionMessage(message)
     },
   })
 
@@ -74,7 +146,7 @@ export function SettingsPage() {
   const publicFields = form.watch('publicFields')
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Settings"
         title="Control what members see first, and what stays private."
@@ -86,8 +158,8 @@ export function SettingsPage() {
         }
       />
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <div className="surface-panel p-8">
+      <section className="grid gap-4 lg:gap-6 xl:grid-cols-[1fr_0.9fr]">
+        <div className="surface-panel p-4 sm:p-6 lg:p-8">
           <div className="flex items-center gap-2">
             <UserCog className="h-5 w-5 text-primary" />
             <p className="section-title">Profile details</p>
@@ -99,38 +171,105 @@ export function SettingsPage() {
 
           <form
             className="mt-6 grid gap-4"
-            onSubmit={form.handleSubmit((values) => saveMutation.mutate(values))}
+            onSubmit={form.handleSubmit((values) => {
+              const parseTags = (value: string | undefined) =>
+                (value ?? '')
+                  .split(',')
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+
+              const graduationYear = values.graduationYearInput?.trim()
+                ? Number(values.graduationYearInput)
+                : null
+
+              saveMutation.mutate({
+                name: values.name,
+                graduationYear: Number.isFinite(graduationYear) ? graduationYear : null,
+                linkedinUrl: values.linkedinUrl,
+                githubUrl: values.githubUrl || undefined,
+                portfolioUrl: values.portfolioUrl || undefined,
+                skills: parseTags(values.skillsInput),
+                hobbies: parseTags(values.hobbiesInput),
+                statusBadge: values.statusBadge,
+                openToCollab: values.openToCollab,
+                jobSeeking: values.jobSeeking,
+                publicFields: Array.from(new Set([...alwaysPublicProfileFields, ...values.publicFields])),
+              })
+            })}
           >
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input {...form.register('name')} />
+              <Label>Display Name</Label>
+              <Input value={settingsQuery.data?.username ?? ''} disabled readOnly />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={settingsQuery.data?.email ?? ''} disabled readOnly />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input {...form.register('name')} placeholder="Enter your full name" />
+            </div>
+
+            <div className="surface-inset grid gap-4 p-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Polytechnic</Label>
+                <Input value={settingsQuery.data?.polytechnic ?? ''} disabled readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Course</Label>
+                <Input value={settingsQuery.data?.course ?? ''} disabled readOnly />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Graduation year</Label>
+              <Input type="number" {...form.register('graduationYearInput')} placeholder="2026" />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>LinkedIn</Label>
-                <Input {...form.register('linkedinUrl')} />
+                <Input {...form.register('linkedinUrl')} placeholder="https://linkedin.com/in/your-handle" />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select {...form.register('statusBadge')}>
+                <div className="flex flex-wrap gap-2">
                   {studentStatuses.map((status) => (
-                    <option key={status} value={status}>
+                    <Button
+                      key={status}
+                      type="button"
+                      size="sm"
+                      variant={form.watch('statusBadge') === status ? 'default' : 'outline'}
+                      onClick={() => form.setValue('statusBadge', status, { shouldValidate: true })}
+                    >
                       {status}
-                    </option>
+                    </Button>
                   ))}
-                </Select>
+                </div>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>GitHub</Label>
-                <Input {...form.register('githubUrl')} />
+                <Input {...form.register('githubUrl')} placeholder="https://github.com/your-handle" />
               </div>
               <div className="space-y-2">
                 <Label>Portfolio</Label>
-                <Input {...form.register('portfolioUrl')} />
+                <Input {...form.register('portfolioUrl')} placeholder="https://your-site.com" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Skills</Label>
+                <Input {...form.register('skillsInput')} placeholder="react, python, design" />
+              </div>
+              <div className="space-y-2">
+                <Label>Hobbies</Label>
+                <Input {...form.register('hobbiesInput')} placeholder="photography, football" />
               </div>
             </div>
 
@@ -152,11 +291,18 @@ export function SettingsPage() {
                 <Eye className="h-4 w-4 text-primary" />
                 <p className="font-medium">Public profile fields</p>
               </div>
-              <p className="body-copy mt-2 !text-sm">
-                Choose what appears on your member profile. Keep at least one field visible.
+              <p className="body-copy mt-2 text-sm!">
+                Polytechnic, Course, Status, and LinkedIn are always public. Choose the optional fields below.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {publicProfileFields.map((field) => {
+                {alwaysPublicProfileFields.map((field) => (
+                  <Badge key={field} variant="secondary">
+                    {fieldLabels[field]}
+                  </Badge>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {optionalPublicFields.map((field) => {
                   const active = publicFields.includes(field)
                   return (
                     <Button
@@ -168,10 +314,7 @@ export function SettingsPage() {
                         const next = active
                           ? publicFields.filter((item) => item !== field)
                           : [...publicFields, field]
-
-                        if (next.length > 0) {
-                          form.setValue('publicFields', next, { shouldValidate: true })
-                        }
+                        form.setValue('publicFields', next, { shouldValidate: true })
                       }}
                     >
                       {fieldLabels[field]}
@@ -182,13 +325,13 @@ export function SettingsPage() {
             </div>
 
             <Button type="submit" className="w-full md:w-auto" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Saving...' : 'Save changes'}
+              {saveMutation.isPending ? 'Saving...' : savedNotice ? 'Saved' : 'Save changes'}
             </Button>
           </form>
         </div>
 
         <div className="grid gap-4">
-          <div className="surface-panel bg-primary p-8 text-primary-foreground">
+          <div className="surface-panel bg-primary p-4 sm:p-6 lg:p-8 text-primary-foreground">
             <Eye className="h-5 w-5" />
             <p className="section-title mt-4 text-primary-foreground">
               Visibility should feel deliberate.
@@ -199,7 +342,7 @@ export function SettingsPage() {
             </p>
           </div>
 
-          <div className="surface-panel p-8">
+          <div className="surface-panel p-4 sm:p-6 lg:p-8">
             <p className="section-kicker">Current account</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge>{settingsQuery.data?.approvalState ?? 'loading'}</Badge>
@@ -210,12 +353,51 @@ export function SettingsPage() {
             <div className="soft-divider mt-6 pt-6">
               <p className="section-kicker">Visible now</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {publicFields.map((field) => (
+                {[...alwaysPublicProfileFields, ...publicFields].map((field) => (
                   <Badge key={field} variant="outline">
                     {fieldLabels[field]}
                   </Badge>
                 ))}
               </div>
+            </div>
+
+            <div className="soft-divider mt-6 space-y-4 pt-6">
+              <p className="section-kicker">Account actions</p>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending || deleteRequestMutation.isPending}
+                >
+                  <LogOut className="h-4 w-4" />
+                  {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => deleteRequestMutation.mutate()}
+                  disabled={logoutMutation.isPending || deleteRequestMutation.isPending || settingsQuery.isLoading}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteRequestMutation.isPending ? 'Preparing request...' : 'Delete account'}
+                </Button>
+              </div>
+
+              <p className="body-copy text-sm!">
+                Deletion follows policy: requests are reviewed by admins and may retain minimal audit or moderation records.
+              </p>
+
+              {deletionDraft ? (
+                <div className="space-y-2">
+                  <Label>Deletion request template</Label>
+                  <Textarea value={deletionDraft} readOnly />
+                </div>
+              ) : null}
+
+              {accountActionMessage ? (
+                <p className="text-sm text-muted-foreground">{accountActionMessage}</p>
+              ) : null}
             </div>
           </div>
         </div>

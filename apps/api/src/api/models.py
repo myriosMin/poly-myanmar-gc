@@ -111,6 +111,7 @@ class ProfileRecord(BaseModel):
     skills: list[str] | None = None
     hobbies: list[str] | None = None
     status_badges: list[str] | None = None
+    public_preferences: list[str] | None = None
     open_to_collab: bool | None = None
     job_seeking: bool | None = None
     manual_verification_notes: str | None = None
@@ -176,6 +177,7 @@ class ProfileUpdateRequest(BaseModel):
     skills: list[str] | None = None
     hobbies: list[str] | None = None
     status_badges: list[str] | None = None
+    public_preferences: list[str] | None = None
     open_to_collab: bool | None = None
     job_seeking: bool | None = None
     manual_verification_notes: str | None = None
@@ -187,6 +189,17 @@ class MeResponse(BaseModel):
     can_access_private_app: bool
     pending_review_count: int
     queue_access: bool
+
+
+class DeletionRequestSubmitRequest(BaseModel):
+    request_details: str | None = None
+
+
+class DeletionRequestSubmitResponse(BaseModel):
+    request_id: UUID
+    status: FlagStatus
+    already_exists: bool
+    message: str
 
 
 class ApprovalRequestRecord(BaseModel):
@@ -356,6 +369,15 @@ class TelegramActionTokenRecord(BaseModel):
     consumed_at: datetime | None = None
 
 
+class TelegramTokenCreateRequest(BaseModel):
+    review_object_type: ReviewObjectType
+    review_object_id: UUID
+    action: ModerationAction
+    actor_telegram_id: int | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    ttl_seconds: int | None = Field(default=None, ge=60, le=86400)
+
+
 class TelegramWebhookRequest(BaseModel):
     action_token: UUID
     review_object_type: ReviewObjectType
@@ -371,6 +393,12 @@ class TelegramWebhookResponse(BaseModel):
     action: ModerationAction
     review_object_type: ReviewObjectType
     review_object_id: UUID
+
+
+class TelegramTokenSweepResponse(BaseModel):
+    consumed_removed: int
+    expired_removed: int
+    total_removed: int
 
 
 class QueueCounts(BaseModel):
