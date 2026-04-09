@@ -15,6 +15,16 @@ def _parse_cors_origins(value: str | None, environment: str) -> list[str]:
     return ["*"]  # Allow all in development
 
 
+def _parse_cors_origins(value: str | None, environment: str) -> list[str]:
+    """Parse CORS origins from comma-separated string or default based on environment."""
+    if value:
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
+    # Default based on environment
+    if environment == "production":
+        return []  # Require explicit configuration in production
+    return ["*"]  # Allow all in development
+
+
 @dataclass(slots=True)
 class Settings:
     app_name: str = "Poly Myanmar GC API"
