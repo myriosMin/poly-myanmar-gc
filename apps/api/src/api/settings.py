@@ -11,6 +11,16 @@ def _parse_bool(value: str | None, *, default: bool) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _parse_cors_origins(value: str | None, environment: str) -> list[str]:
+    """Parse CORS origins from comma-separated string or default based on environment."""
+    if value:
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
+    # Default based on environment
+    if environment == "production":
+        return []  # Require explicit configuration in production
+    return ["*"]  # Allow all in development
+
+
 @dataclass(slots=True)
 class Settings:
     app_name: str = "Poly Myanmar GC API"
@@ -49,20 +59,22 @@ class Settings:
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
+    environment = getenv("ENVIRONMENT", "development")
     settings = Settings(
-        environment=getenv("ENVIRONMENT", "development"),
+        environment=environment,
         default_actor_id=getenv("DEFAULT_ACTOR_ID", "11111111-1111-1111-1111-111111111111"),
         allow_dev_actor_fallback=_parse_bool(
             getenv("ALLOW_DEV_ACTOR_FALLBACK"),
-            default=getenv("ENVIRONMENT", "development") == "development",
+            default=environment == "development",
         ),
+        cors_origins=_parse_cors_origins(getenv("CORS_ORIGINS"), environment),
         supabase_url=getenv("SUPABASE_URL", ""),
         supabase_anon_key=getenv("SUPABASE_ANON_KEY", ""),
         supabase_service_role_key=getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
         supabase_jwt_secret=getenv("SUPABASE_JWT_SECRET", ""),
         telegram_bot_token=getenv("TELEGRAM_BOT_TOKEN", ""),
         telegram_review_chat_id=getenv("TELEGRAM_REVIEW_CHAT_ID", ""),
-        store_backend=getenv("STORE_BACKEND", "memory"),
+        store_backend=getenv("STORE_BACKEND", "supabase"),
     )
     settings.validate_required_credentials()
     return settings

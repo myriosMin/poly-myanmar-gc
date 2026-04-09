@@ -1,149 +1,164 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
-import { Eye, LogOut, Trash2, UserCog } from 'lucide-react'
-import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
-import { PageHeader } from '@/components/layout/page-header'
-import { api } from '@/lib/api'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Eye, LogOut, Trash2, UserCog } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/layout/page-header";
+import { api } from "@/lib/api";
 import {
   alwaysPublicProfileFields,
   defaultPublicProfileFields,
   publicProfileFields,
   studentStatuses,
-} from '@/lib/domain'
-import { settingsSchema, type SettingsForm } from '@/lib/schemas'
-import { signOut } from '@/lib/supabase'
+} from "@/lib/domain";
+import { settingsSchema, type SettingsForm } from "@/lib/schemas";
+import { signOut } from "@/lib/supabase";
 
 const optionalPublicFields = publicProfileFields.filter(
-  (field) => !alwaysPublicProfileFields.includes(field as (typeof alwaysPublicProfileFields)[number]),
-)
+  (field) =>
+    !alwaysPublicProfileFields.includes(
+      field as (typeof alwaysPublicProfileFields)[number],
+    ),
+);
 
 const fieldLabels: Record<(typeof publicProfileFields)[number], string> = {
-  polytechnic: 'Polytechnic',
-  course: 'Course',
-  statusBadge: 'Status',
-  jobSeeking: 'Job-seeking status',
-  linkedinUrl: 'LinkedIn',
-  email: 'Email',
-  skills: 'Skills',
-  hobbies: 'Hobbies',
-  githubUrl: 'GitHub',
-  portfolioUrl: 'Portfolio',
-}
+  polytechnic: "Polytechnic",
+  course: "Course",
+  statusBadge: "Status",
+  jobSeeking: "Job-seeking status",
+  linkedinUrl: "LinkedIn",
+  email: "Email",
+  skills: "Skills",
+  hobbies: "Hobbies",
+  githubUrl: "GitHub",
+  portfolioUrl: "Portfolio",
+};
 
 export function SettingsPage() {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [accountActionMessage, setAccountActionMessage] = useState<string | null>(null)
-  const [deletionDraft, setDeletionDraft] = useState<string>('')
-  const [savedNotice, setSavedNotice] = useState(false)
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [accountActionMessage, setAccountActionMessage] = useState<
+    string | null
+  >(null);
+  const [deletionDraft, setDeletionDraft] = useState<string>("");
+  const [savedNotice, setSavedNotice] = useState(false);
   const settingsQuery = useQuery({
-    queryKey: ['settings'],
+    queryKey: ["settings"],
     queryFn: () => api.getSettings(),
-  })
+  });
 
   const form = useForm<SettingsForm>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      name: '',
-      graduationYearInput: '',
-      linkedinUrl: '',
-      githubUrl: '',
-      portfolioUrl: '',
-      skillsInput: '',
-      hobbiesInput: '',
-      statusBadge: 'mentor',
+      name: "",
+      graduationYearInput: "",
+      linkedinUrl: "",
+      githubUrl: "",
+      portfolioUrl: "",
+      skillsInput: "",
+      hobbiesInput: "",
+      statusBadge: "mentor",
       openToCollab: true,
       jobSeeking: false,
       publicFields: defaultPublicProfileFields,
     },
-  })
+  });
 
   useEffect(() => {
     if (!settingsQuery.data) {
-      return
+      return;
     }
 
     form.reset({
-      name: settingsQuery.data.name ?? '',
-      graduationYearInput: settingsQuery.data.graduationYear ? String(settingsQuery.data.graduationYear) : '',
-      linkedinUrl: settingsQuery.data.linkedinUrl ?? '',
-      githubUrl: settingsQuery.data.githubUrl ?? '',
-      portfolioUrl: settingsQuery.data.portfolioUrl ?? '',
-      skillsInput: settingsQuery.data.skills.join(', '),
-      hobbiesInput: settingsQuery.data.hobbies.join(', '),
+      name: settingsQuery.data.name ?? "",
+      graduationYearInput: settingsQuery.data.graduationYear
+        ? String(settingsQuery.data.graduationYear)
+        : "",
+      linkedinUrl: settingsQuery.data.linkedinUrl ?? "",
+      githubUrl: settingsQuery.data.githubUrl ?? "",
+      portfolioUrl: settingsQuery.data.portfolioUrl ?? "",
+      skillsInput: settingsQuery.data.skills.join(", "),
+      hobbiesInput: settingsQuery.data.hobbies.join(", "),
       statusBadge: settingsQuery.data.statusBadge,
       openToCollab: settingsQuery.data.openToCollab,
       jobSeeking: settingsQuery.data.jobSeeking,
       publicFields: settingsQuery.data.publicFields,
-    })
-  }, [form, settingsQuery.data])
+    });
+  }, [form, settingsQuery.data]);
 
   const saveMutation = useMutation({
     mutationFn: api.updateSettings,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings'] })
-      await queryClient.invalidateQueries({ queryKey: ['session'] })
-      setSavedNotice(true)
-      window.setTimeout(() => setSavedNotice(false), 2000)
+      await queryClient.invalidateQueries({ queryKey: ["settings"] });
+      await queryClient.invalidateQueries({ queryKey: ["session"] });
+      setSavedNotice(true);
+      window.setTimeout(() => setSavedNotice(false), 2000);
     },
-  })
+  });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await signOut()
-      globalThis.localStorage.removeItem('actor-id')
-      globalThis.localStorage.removeItem('onboarding-draft')
+      await signOut();
+      globalThis.localStorage.removeItem("actor-id");
+      globalThis.localStorage.removeItem("onboarding-draft");
     },
     onSuccess: async () => {
-      await queryClient.cancelQueries()
-      queryClient.clear()
-      navigate('/auth', { replace: true })
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      navigate("/auth", { replace: true });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Unable to log out right now.'
-      setAccountActionMessage(message)
+      const message =
+        error instanceof Error ? error.message : "Unable to log out right now.";
+      setAccountActionMessage(message);
     },
-  })
+  });
 
   const deleteRequestMutation = useMutation({
     mutationFn: async () => {
-      const settings = settingsQuery.data ?? await api.getSettings()
+      const settings = settingsQuery.data ?? (await api.getSettings());
       const draft = [
-        'Deletion request',
-        `Full name: ${settings.name || '(please fill)'}`,
+        "Deletion request",
+        `Full name: ${settings.name || "(please fill)"}`,
         `Google sign-in email: ${settings.email}`,
-        `LinkedIn URL: ${settings.linkedinUrl || '(please fill)'}`,
-        'Request: Please delete my account and associated profile data.',
-      ].join('\n')
+        `LinkedIn URL: ${settings.linkedinUrl || "(please fill)"}`,
+        "Request: Please delete my account and associated profile data.",
+      ].join("\n");
 
       if (globalThis.navigator?.clipboard?.writeText) {
-        await globalThis.navigator.clipboard.writeText(draft)
+        await globalThis.navigator.clipboard.writeText(draft);
       }
 
-      const result = await api.requestAccountDeletion(draft)
-      return { draft, result }
+      const result = await api.requestAccountDeletion(draft);
+      return { draft, result };
     },
     onSuccess: ({ draft, result }) => {
-      setDeletionDraft(draft)
-      const requestState = result.already_exists ? 'already open' : 'submitted'
-      setAccountActionMessage(`${result.message} Request ID: ${result.request_id} (${requestState}).`)
+      setDeletionDraft(draft);
+      const requestState = result.already_exists ? "already open" : "submitted";
+      setAccountActionMessage(
+        `${result.message} Request ID: ${result.request_id} (${requestState}).`,
+      );
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Unable to prepare deletion request.'
-      setAccountActionMessage(message)
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to prepare deletion request.";
+      setAccountActionMessage(message);
     },
-  })
+  });
 
   // eslint-disable-next-line react-hooks/incompatible-library
-  const publicFields = form.watch('publicFields')
+  const publicFields = form.watch("publicFields");
+
+  const selectedStatus = form.watch("statusBadge");
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -152,7 +167,10 @@ export function SettingsPage() {
         title="Control what members see first, and what stays private."
         description="Your profile should feel intentional: enough detail to be discoverable, not so much that it becomes noisy."
         actions={
-          <Badge variant="outline" className="h-11 px-4 text-sm normal-case tracking-[0.14em]">
+          <Badge
+            variant="outline"
+            className="h-11 px-4 text-sm normal-case tracking-[0.14em]"
+          >
             Member-only visibility
           </Badge>
         }
@@ -165,26 +183,28 @@ export function SettingsPage() {
             <p className="section-title">Profile details</p>
           </div>
           <p className="body-copy mt-3 max-w-md">
-            These settings shape how you appear inside the directory and how easy you are to
-            approach.
+            These settings shape how you appear inside the directory and how
+            easy you are to approach.
           </p>
 
           <form
             className="mt-6 grid gap-4"
             onSubmit={form.handleSubmit((values) => {
               const parseTags = (value: string | undefined) =>
-                (value ?? '')
-                  .split(',')
+                (value ?? "")
+                  .split(",")
                   .map((item) => item.trim())
-                  .filter(Boolean)
+                  .filter(Boolean);
 
               const graduationYear = values.graduationYearInput?.trim()
                 ? Number(values.graduationYearInput)
-                : null
+                : null;
 
               saveMutation.mutate({
                 name: values.name,
-                graduationYear: Number.isFinite(graduationYear) ? graduationYear : null,
+                graduationYear: Number.isFinite(graduationYear)
+                  ? graduationYear
+                  : null,
                 linkedinUrl: values.linkedinUrl,
                 githubUrl: values.githubUrl || undefined,
                 portfolioUrl: values.portfolioUrl || undefined,
@@ -193,45 +213,76 @@ export function SettingsPage() {
                 statusBadge: values.statusBadge,
                 openToCollab: values.openToCollab,
                 jobSeeking: values.jobSeeking,
-                publicFields: Array.from(new Set([...alwaysPublicProfileFields, ...values.publicFields])),
-              })
+                publicFields: Array.from(
+                  new Set([
+                    ...alwaysPublicProfileFields,
+                    ...values.publicFields,
+                  ]),
+                ),
+              });
             })}
           >
             <div className="space-y-2">
               <Label>Display Name</Label>
-              <Input value={settingsQuery.data?.username ?? ''} disabled readOnly />
+              <Input
+                value={settingsQuery.data?.username ?? ""}
+                disabled
+                readOnly
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input value={settingsQuery.data?.email ?? ''} disabled readOnly />
+              <Input
+                value={settingsQuery.data?.email ?? ""}
+                disabled
+                readOnly
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Full Name</Label>
-              <Input {...form.register('name')} placeholder="Enter your full name" />
+              <Input
+                {...form.register("name")}
+                placeholder="Enter your full name"
+              />
             </div>
 
             <div className="surface-inset grid gap-4 p-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Polytechnic</Label>
-                <Input value={settingsQuery.data?.polytechnic ?? ''} disabled readOnly />
+                <Input
+                  value={settingsQuery.data?.polytechnic ?? ""}
+                  disabled
+                  readOnly
+                />
               </div>
               <div className="space-y-2">
                 <Label>Course</Label>
-                <Input value={settingsQuery.data?.course ?? ''} disabled readOnly />
+                <Input
+                  value={settingsQuery.data?.course ?? ""}
+                  disabled
+                  readOnly
+                />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Graduation year</Label>
-              <Input type="number" {...form.register('graduationYearInput')} placeholder="2026" />
+              <Input
+                type="number"
+                {...form.register("graduationYearInput")}
+                placeholder="2026"
+              />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>LinkedIn</Label>
-                <Input {...form.register('linkedinUrl')} placeholder="https://linkedin.com/in/your-handle" />
+                <Input
+                  {...form.register("linkedinUrl")}
+                  placeholder="https://linkedin.com/in/your-handle"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -241,8 +292,14 @@ export function SettingsPage() {
                       key={status}
                       type="button"
                       size="sm"
-                      variant={form.watch('statusBadge') === status ? 'default' : 'outline'}
-                      onClick={() => form.setValue('statusBadge', status, { shouldValidate: true })}
+                      variant={
+                        selectedStatus === status ? "default" : "outline"
+                      }
+                      onClick={() =>
+                        form.setValue("statusBadge", status, {
+                          shouldValidate: true,
+                        })
+                      }
                     >
                       {status}
                     </Button>
@@ -254,35 +311,51 @@ export function SettingsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>GitHub</Label>
-                <Input {...form.register('githubUrl')} placeholder="https://github.com/your-handle" />
+                <Input
+                  {...form.register("githubUrl")}
+                  placeholder="https://github.com/your-handle"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Portfolio</Label>
-                <Input {...form.register('portfolioUrl')} placeholder="https://your-site.com" />
+                <Input
+                  {...form.register("portfolioUrl")}
+                  placeholder="https://your-site.com"
+                />
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Skills</Label>
-                <Input {...form.register('skillsInput')} placeholder="react, python, design" />
+                <Input
+                  {...form.register("skillsInput")}
+                  placeholder="react, python, design"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Hobbies</Label>
-                <Input {...form.register('hobbiesInput')} placeholder="photography, football" />
+                <Input
+                  {...form.register("hobbiesInput")}
+                  placeholder="photography, football"
+                />
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Switch
                 aria-label="Open to collab"
-                checked={form.watch('openToCollab')}
-                onChange={(event) => form.setValue('openToCollab', event.target.checked)}
+                checked={form.watch("openToCollab")}
+                onChange={(event) =>
+                  form.setValue("openToCollab", event.target.checked)
+                }
               />
               <Switch
                 aria-label="Job seeking"
-                checked={form.watch('jobSeeking')}
-                onChange={(event) => form.setValue('jobSeeking', event.target.checked)}
+                checked={form.watch("jobSeeking")}
+                onChange={(event) =>
+                  form.setValue("jobSeeking", event.target.checked)
+                }
               />
             </div>
 
@@ -292,7 +365,8 @@ export function SettingsPage() {
                 <p className="font-medium">Public profile fields</p>
               </div>
               <p className="body-copy mt-2 text-sm!">
-                Polytechnic, Course, Status, and LinkedIn are always public. Choose the optional fields below.
+                Polytechnic, Course, Status, and LinkedIn are always public.
+                Choose the optional fields below.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {alwaysPublicProfileFields.map((field) => (
@@ -303,29 +377,39 @@ export function SettingsPage() {
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 {optionalPublicFields.map((field) => {
-                  const active = publicFields.includes(field)
+                  const active = publicFields.includes(field);
                   return (
                     <Button
                       key={field}
                       type="button"
                       size="sm"
-                      variant={active ? 'default' : 'outline'}
+                      variant={active ? "default" : "outline"}
                       onClick={() => {
                         const next = active
                           ? publicFields.filter((item) => item !== field)
-                          : [...publicFields, field]
-                        form.setValue('publicFields', next, { shouldValidate: true })
+                          : [...publicFields, field];
+                        form.setValue("publicFields", next, {
+                          shouldValidate: true,
+                        });
                       }}
                     >
                       {fieldLabels[field]}
                     </Button>
-                  )
+                  );
                 })}
               </div>
             </div>
 
-            <Button type="submit" className="w-full md:w-auto" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Saving...' : savedNotice ? 'Saved' : 'Save changes'}
+            <Button
+              type="submit"
+              className="w-full md:w-auto"
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending
+                ? "Saving..."
+                : savedNotice
+                  ? "Saved"
+                  : "Save changes"}
             </Button>
           </form>
         </div>
@@ -337,27 +421,33 @@ export function SettingsPage() {
               Visibility should feel deliberate.
             </p>
             <p className="body-copy mt-3 text-primary-foreground/80">
-              Members should understand your school, direction, and availability quickly, without
-              you exposing more than you want.
+              Members should understand your school, direction, and availability
+              quickly, without you exposing more than you want.
             </p>
           </div>
 
           <div className="surface-panel p-4 sm:p-6 lg:p-8">
             <p className="section-kicker">Current account</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Badge>{settingsQuery.data?.approvalState ?? 'loading'}</Badge>
-              <Badge variant="secondary">{settingsQuery.data?.polytechnic ?? 'SP'}</Badge>
-              <Badge variant="outline">{settingsQuery.data?.role ?? 'member'}</Badge>
+              <Badge>{settingsQuery.data?.approvalState ?? "loading"}</Badge>
+              <Badge variant="secondary">
+                {settingsQuery.data?.polytechnic ?? "SP"}
+              </Badge>
+              <Badge variant="outline">
+                {settingsQuery.data?.role ?? "member"}
+              </Badge>
             </div>
 
             <div className="soft-divider mt-6 pt-6">
               <p className="section-kicker">Visible now</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {[...alwaysPublicProfileFields, ...publicFields].map((field) => (
-                  <Badge key={field} variant="outline">
-                    {fieldLabels[field]}
-                  </Badge>
-                ))}
+                {[...alwaysPublicProfileFields, ...publicFields].map(
+                  (field) => (
+                    <Badge key={field} variant="outline">
+                      {fieldLabels[field]}
+                    </Badge>
+                  ),
+                )}
               </div>
             </div>
 
@@ -368,24 +458,33 @@ export function SettingsPage() {
                   type="button"
                   variant="outline"
                   onClick={() => logoutMutation.mutate()}
-                  disabled={logoutMutation.isPending || deleteRequestMutation.isPending}
+                  disabled={
+                    logoutMutation.isPending || deleteRequestMutation.isPending
+                  }
                 >
                   <LogOut className="h-4 w-4" />
-                  {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
+                  {logoutMutation.isPending ? "Logging out..." : "Log out"}
                 </Button>
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={() => deleteRequestMutation.mutate()}
-                  disabled={logoutMutation.isPending || deleteRequestMutation.isPending || settingsQuery.isLoading}
+                  disabled={
+                    logoutMutation.isPending ||
+                    deleteRequestMutation.isPending ||
+                    settingsQuery.isLoading
+                  }
                 >
                   <Trash2 className="h-4 w-4" />
-                  {deleteRequestMutation.isPending ? 'Preparing request...' : 'Delete account'}
+                  {deleteRequestMutation.isPending
+                    ? "Preparing request..."
+                    : "Delete account"}
                 </Button>
               </div>
 
               <p className="body-copy text-sm!">
-                Deletion follows policy: requests are reviewed by admins and may retain minimal audit or moderation records.
+                Deletion follows policy: requests are reviewed by admins and may
+                retain minimal audit or moderation records.
               </p>
 
               {deletionDraft ? (
@@ -396,12 +495,14 @@ export function SettingsPage() {
               ) : null}
 
               {accountActionMessage ? (
-                <p className="text-sm text-muted-foreground">{accountActionMessage}</p>
+                <p className="text-sm text-muted-foreground">
+                  {accountActionMessage}
+                </p>
               ) : null}
             </div>
           </div>
         </div>
       </section>
     </div>
-  )
+  );
 }
