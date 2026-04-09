@@ -16,19 +16,19 @@ Private networking platform for Myanmar polytechnic students, recent graduates, 
 2. Submit onboarding details from the auth page.
 3. Wait in pending approval state.
 4. After approval, access private pages:
-	- Profiles
-	- Events and RSVP
-	- Resources
-	- Collaboration board
+   - Profiles
+   - Events and RSVP
+   - Resources
+   - Collaboration board
 
 ### Typical reviewer flow
 
 1. Open the admin page.
 2. Review queue categories:
-	- User applications
-	- Resource submissions
-	- Event drafts
-	- Flags
+   - User applications
+   - Resource submissions
+   - Event drafts
+   - Flags
 3. Approve or reject items as needed.
 
 ### Worker behavior
@@ -118,6 +118,27 @@ make build-web
 make lint-web
 make test
 ```
+
+## Vercel Deployment
+
+Deploy as two separate Vercel projects from this monorepo:
+
+1. Web project
+   - Root Directory: `apps/web`
+   - Framework preset: Vite
+   - Required env: `VITE_API_BASE_URL`
+
+2. API project
+   - Root Directory: `apps/api`
+   - Runtime: Python (configured via `apps/api/vercel.json`)
+   - Entry file: `apps/api/vercel_app.py`
+   - Dependencies: `apps/api/requirements.txt`
+   - Required env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_REVIEW_CHAT_ID`, `CORS_ORIGINS`
+
+After both deployments are live, set:
+
+- Web `VITE_API_BASE_URL` to your deployed API URL.
+- API `CORS_ORIGINS` to include your deployed web URL.
 
 ## Workspace Layout
 
