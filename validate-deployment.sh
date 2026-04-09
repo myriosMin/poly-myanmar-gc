@@ -3,7 +3,8 @@
 # Poly Myanmar GC - Deployment Validation Script
 # Run this before deploying to ensure everything is ready
 
-cd /Users/myrios/Downloads/poly-network
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+cd "$SCRIPT_DIR"
 
 echo "🚀 Poly Myanmar GC - Deployment Validation"
 echo "=========================================="
@@ -25,8 +26,8 @@ command -v node &>/dev/null && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}�
 echo -n "npm installed... "
 command -v npm &>/dev/null && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
 
-echo -n "Python 3.11+ installed... "
-python3 --version 2>&1 | grep -E '3.1[1-9]|3\.[2-9]' >/dev/null && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
+echo -n "Python 3.12+ installed... "
+python3 --version 2>&1 | grep -E '3\.1[2-9]|3\.[2-9]' >/dev/null && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
 
 echo -n "uv installed... "
 command -v uv &>/dev/null && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
@@ -43,14 +44,14 @@ echo "====================="
 
 echo -n "Web build succeeds... "
 cd apps/web && npm run build >/dev/null 2>&1 && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
-cd /Users/myrios/Downloads/poly-network
+cd "$SCRIPT_DIR"
 
 echo -n "Web dist exists... "
 test -d apps/web/dist && test -f apps/web/dist/index.html && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
 
 echo -n "TypeScript compiles... "
 cd apps/web && npx tsc -b >/dev/null 2>&1 && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
-cd /Users/myrios/Downloads/poly-network
+cd "$SCRIPT_DIR"
 
 echo ""
 echo "✨ Code Quality"
@@ -58,7 +59,7 @@ echo "==============="
 
 echo -n "Web linting passes... "
 cd apps/web && npm run lint >/dev/null 2>&1 && echo -e "${GREEN}✓${NC}" || { echo -e "${RED}✗${NC}"; FAILURES=$((FAILURES + 1)); }
-cd /Users/myrios/Downloads/poly-network
+cd "$SCRIPT_DIR"
 
 echo -n "No uncommitted changes... "
 [ -z "$(git status --porcelain 2>/dev/null)" ] && echo -e "${GREEN}✓${NC}" || echo -e "${YELLOW}⚠${NC} (informational)"

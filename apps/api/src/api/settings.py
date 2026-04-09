@@ -15,16 +15,6 @@ def _parse_cors_origins(value: str | None, environment: str) -> list[str]:
     return ["*"]  # Allow all in development
 
 
-def _parse_cors_origins(value: str | None, environment: str) -> list[str]:
-    """Parse CORS origins from comma-separated string or default based on environment."""
-    if value:
-        return [origin.strip() for origin in value.split(",") if origin.strip()]
-    # Default based on environment
-    if environment == "production":
-        return []  # Require explicit configuration in production
-    return ["*"]  # Allow all in development
-
-
 @dataclass(slots=True)
 class Settings:
     app_name: str = "Poly Myanmar GC API"
@@ -40,6 +30,8 @@ class Settings:
     store_backend: str = "memory"
 
     def validate_required_credentials(self) -> None:
+        if self.store_backend != "supabase":
+            return
         required_credentials = {
             "SUPABASE_URL": self.supabase_url,
             "SUPABASE_ANON_KEY": self.supabase_anon_key,
@@ -71,7 +63,7 @@ def get_settings() -> Settings:
         supabase_jwt_secret=getenv("SUPABASE_JWT_SECRET", ""),
         telegram_bot_token=getenv("TELEGRAM_BOT_TOKEN", ""),
         telegram_review_chat_id=getenv("TELEGRAM_REVIEW_CHAT_ID", ""),
-        store_backend=getenv("STORE_BACKEND", "supabase"),
+        store_backend=getenv("STORE_BACKEND", "memory"),
     )
     settings.validate_required_credentials()
     return settings
