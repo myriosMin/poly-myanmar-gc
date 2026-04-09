@@ -38,11 +38,9 @@ test-api:
 from fastapi.testclient import TestClient; \
 from api.main import app; \
 client = TestClient(app); \
-checks = [('/healthz', 200)]; \
-auth_paths = ['/me', '/profiles', '/events', '/resources', '/collab', '/admin/queue']; \
-[checks.append((p, 401)) for p in auth_paths]; \
-failures = []; \
-[failures.append(f'{path}: expected {exp}, got {client.get(path).status_code}') for path, exp in checks if client.get(path).status_code != exp]; \
+checks = [('/healthz', 200)] + [(p, 401) for p in ['/me', '/profiles', '/events', '/resources', '/collab', '/admin/queue']]; \
+results = [(path, exp, client.get(path).status_code) for path, exp in checks]; \
+failures = [f'{path}: expected {exp}, got {got}' for path, exp, got in results if exp != got]; \
 print('All checks passed.') if not failures else [print(f'FAIL: {f}') for f in failures] or exit(1)"
 
 pytest-api:
