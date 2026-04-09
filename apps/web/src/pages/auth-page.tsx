@@ -215,7 +215,7 @@ export function AuthPage() {
       try {
         const draft = JSON.parse(rawDraft) as OnboardingInput;
         await getAuthenticatedUser();
-        const updatedSession = await api.submitOnboarding(draft);
+        await api.submitOnboarding(draft);
         if (cancelled) {
           return;
         }
