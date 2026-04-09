@@ -20,3 +20,4 @@ apps/web/dist/
 apps/api/.venv/
 apps/worker/.venv/
 .temp/
+.vercel
