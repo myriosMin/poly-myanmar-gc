@@ -12,8 +12,7 @@
     "dev:web": "npm run dev --workspace web",
     "build:web": "npm run build --workspace web",
     "lint:web": "npm run lint --workspace web",
-    "dev:api": "uv run --directory apps/api uvicorn api.main:app --reload --env-file .env",
-    "dev:worker": "uv run --directory apps/worker python -m worker.main"
+    "dev:api": "uv run --directory apps/api uvicorn api.main:app --reload --env-file .env"
   },
   "repository": {
     "type": "git",

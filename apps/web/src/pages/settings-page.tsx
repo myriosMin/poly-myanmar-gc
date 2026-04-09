@@ -106,7 +106,6 @@ export function SettingsPage() {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await signOut();
-      globalThis.localStorage.removeItem("actor-id");
       globalThis.localStorage.removeItem("onboarding-draft");
     },
     onSuccess: async () => {
