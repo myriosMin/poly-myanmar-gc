@@ -8,7 +8,7 @@ Private networking platform for Myanmar polytechnic students, recent graduates, 
 
 - Members: discover peers, RSVP to events, submit useful resources, and join collaboration boards.
 - Reviewers: process approvals and moderation queue items.
-- Superadmins: all reviewer actions plus worker-write and ban/unban capabilities.
+- Superadmins: all reviewer actions plus ban/unban capabilities.
 
 ### Typical member flow
 
@@ -31,12 +31,6 @@ Private networking platform for Myanmar polytechnic students, recent graduates, 
    - Flags
 3. Approve or reject items as needed.
 
-### Worker behavior
-
-- Generates event drafts on a schedule.
-- Detects suspicious domains from configured event sources.
-- Pushes drafts and flags to admin endpoints using actor header auth.
-
 ## Current Progress
 
 As of 2026-03-27, the repository is in integrated MVP state.
@@ -45,23 +39,19 @@ As of 2026-03-27, the repository is in integrated MVP state.
 
 - Frontend pages are wired to real API calls through a typed client in apps/web/src/lib/api.ts.
 - Session query is API-backed.
-- Onboarding submit calls backend endpoint and persists actor id for request headers.
+- Onboarding submit calls backend endpoint through authenticated bearer sessions.
 - Settings, profiles, events, resources, collab, and admin pages are API-backed.
 - Pending approval simulation action is gated to development mode.
 - API route for POST /me/onboarding is implemented with actor ownership validation.
-- Worker can push event drafts and flags to API admin endpoints.
-- Worker settings support API base URL and actor id env configuration.
 - Root smoke tests are passing:
   - make test-api
-  - make test-worker
 
 ### Still in-progress / not production-ready
 
 - API persistence still defaults to in-memory store in normal local flow.
 - Full Supabase-backed store integration across all domains is not complete.
-- Authentication is still dev-style actor header based; no Google OAuth/JWT session flow yet.
+- Authentication is bearer-token based (Supabase session JWT validation).
 - Telegram integration is not connected to a live bot workflow.
-- Worker sourcing is deterministic and does not yet fetch from real external data feeds.
 - Deployment and secret hardening still need production pass.
 
 ## Local Development Setup
@@ -89,9 +79,6 @@ The default local values in .env.example include:
 
 - API_BASE_URL
 - VITE_API_BASE_URL
-- WORKER_API_BASE_URL
-- WORKER_ACTOR_ID
-- DEFAULT_ACTOR_ID
 
 ### 3) Run services
 
@@ -100,14 +87,12 @@ In separate terminals:
 ```bash
 make dev-api
 make dev-web
-make dev-worker
 ```
 
 ### 4) Run checks
 
 ```bash
 make test-api
-make test-worker
 cd apps/web && npx tsc --noEmit
 ```
 
@@ -144,7 +129,6 @@ After both deployments are live, set:
 
 - apps/web: Vite + React + TypeScript frontend
 - apps/api: FastAPI API
-- apps/worker: background jobs
 - packages/contracts: shared role/status/action enums
 - supabase/migrations: SQL schema and policy changes
 - docs: legal and product docs

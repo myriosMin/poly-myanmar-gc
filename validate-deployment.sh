@@ -139,7 +139,7 @@ get_env_value() {
   return 1
 }
 
-REQUIRED_VARS=("SUPABASE_URL" "SUPABASE_ANON_KEY" "SUPABASE_SERVICE_ROLE_KEY" "SUPABASE_JWT_SECRET" "TELEGRAM_BOT_TOKEN" "TELEGRAM_REVIEW_CHAT_ID")
+REQUIRED_VARS=("ENVIRONMENT" "SUPABASE_URL" "SUPABASE_ANON_KEY" "SUPABASE_SERVICE_ROLE_KEY" "SUPABASE_JWT_SECRET" "TELEGRAM_BOT_TOKEN" "TELEGRAM_REVIEW_CHAT_ID" "CORS_ORIGINS")
 MISSING=0
 
 if [ -f .env ]; then
@@ -154,6 +154,12 @@ for var in "${REQUIRED_VARS[@]}"; do
     echo -e "  ${GREEN}✓${NC} $var"
   fi
 done
+
+ENV_VALUE="$(get_env_value "ENVIRONMENT" 2>/dev/null || true)"
+if [ -n "$ENV_VALUE" ] && [ "$ENV_VALUE" != "production" ]; then
+  echo -e "  ${RED}✗${NC} ENVIRONMENT must be 'production' for deployment checks (current: $ENV_VALUE)"
+  MISSING=$((MISSING + 1))
+fi
 
 echo ""
 echo "📊 Summary"

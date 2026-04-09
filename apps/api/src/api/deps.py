@@ -40,30 +40,14 @@ def _resolve_token_user(token: str) -> AuthenticatedUser:
 
 def get_authenticated_user(
     authorization: str | None = Header(default=None, alias="Authorization"),
-    x_actor_id: UUID | None = Header(default=None, alias="X-Actor-Id"),
-    store: StoreProtocol = Depends(get_store),
 ) -> AuthenticatedUser:
-    if authorization:
-        scheme, _, token = authorization.partition(" ")
-        if scheme.lower() != "bearer" or not token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
-        return _resolve_token_user(token)
-
-    settings = get_settings()
-    if not settings.allow_dev_actor_fallback:
+    if not authorization:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
 
-    # Optional fallback for local/dev flows when bearer auth is unavailable.
-    actor_id = x_actor_id or UUID(settings.default_actor_id)
-    actor = store.get_actor(actor_id)
-    if actor is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown actor")
-
-    return AuthenticatedUser(
-        id=actor.id,
-        email=actor.email,
-        subject=actor.google_subject,
-    )
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
+    return _resolve_token_user(token)
 
 
 def get_actor(

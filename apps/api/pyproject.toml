@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "myriosMin", email = "minmyrios@gmail.com" }
 ]
-requires-python = ">=3.11.11"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.116.1",
     "httpx>=0.28.1",
@@ -19,6 +19,7 @@ dependencies = [
 
 [project.scripts]
 api = "api.main:main"
+app = "vercel_app:app"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "python-dotenv>=1.0"]
