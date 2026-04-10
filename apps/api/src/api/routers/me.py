@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import logging
 from uuid import uuid4
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from postgrest.exceptions import APIError
 
@@ -23,6 +25,58 @@ from ..supabase_client import get_supabase_client
 
 router = APIRouter(tags=["me"])
 ACCOUNT_DELETION_SUBJECT_TYPE = "account_deletion_request"
+logger = logging.getLogger(__name__)
+
+
+def _notify_onboarding_submission(
+    payload: OnboardingSubmitRequest,
+    *,
+    approval_request_id: str | None,
+    approval_status: ApprovalState,
+) -> None:
+    settings = get_settings()
+    if (
+        not settings.supabase_url
+        or not settings.supabase_service_role_key
+        or not settings.supabase_approval_function_name
+    ):
+        return
+
+    function_url = (
+        f"{settings.supabase_url.rstrip('/')}/functions/v1/{settings.supabase_approval_function_name}"
+    )
+    body = {
+        "event_type": "onboarding_submitted",
+        "approval_request_id": approval_request_id,
+        "approval_status": approval_status.value,
+        "user": {
+            "user_id": str(payload.user_id),
+            "username": payload.username,
+            "email": payload.email,
+            "name": payload.name,
+            "polytechnic": payload.polytechnic,
+            "course": payload.course,
+            "graduation_year": payload.graduation_year,
+            "linkedin_url": str(payload.linkedin_url),
+            "manual_proof_url": str(payload.manual_proof_url) if payload.manual_proof_url else None,
+            "manual_verification_notes": payload.manual_verification_notes,
+        },
+    }
+
+    try:
+        with httpx.Client(timeout=4.0) as client:
+            response = client.post(
+                function_url,
+                json=body,
+                headers={
+                    "Authorization": f"Bearer {settings.supabase_service_role_key}",
+                    "Content-Type": "application/json",
+                },
+            )
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        # Notifications are best-effort and should not block onboarding writes.
+        logger.warning("approval notifier edge function call failed: %s", exc)
 
 
 def _upsert_onboarding_supabase(payload: OnboardingSubmitRequest) -> ProfileRecord | None:
@@ -70,7 +124,7 @@ def _upsert_onboarding_supabase(payload: OnboardingSubmitRequest) -> ProfileReco
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Supabase profile upsert failed: {exc.message}") from exc
 
     try:
-        client.table("approval_requests").insert(
+        approval_response = client.table("approval_requests").insert(
             {
                 "user_id": str(payload.user_id),
                 "review_object_type": ReviewObjectType.user_application.value,
@@ -81,6 +135,14 @@ def _upsert_onboarding_supabase(payload: OnboardingSubmitRequest) -> ProfileReco
         ).execute()
     except APIError as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Supabase approval request insert failed: {exc.message}") from exc
+
+    approval_rows = approval_response.data or []
+    approval_request_id = str(approval_rows[0].get("id")) if approval_rows else None
+    _notify_onboarding_submission(
+        payload,
+        approval_request_id=approval_request_id,
+        approval_status=approval_status,
+    )
 
     rows = profile_result.data or []
     if not rows:

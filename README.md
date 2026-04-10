@@ -125,6 +125,11 @@ After both deployments are live, set:
 - Web `VITE_API_BASE_URL` to your deployed API URL.
 - API `CORS_ORIGINS` to include your deployed web URL.
 
+For onboarding admin notifications via Supabase Edge Functions, also set:
+
+- API `SUPABASE_APPROVAL_FUNCTION_NAME` (default `admin-approval-notifier`)
+- Edge function secrets/env such as `APPROVAL_ACTION_SECRET` and notification providers (Telegram and/or email)
+
 ## Workspace Layout
 
 - apps/web: Vite + React + TypeScript frontend

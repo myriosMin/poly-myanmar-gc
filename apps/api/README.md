@@ -31,6 +31,7 @@ Set these in the Vercel project settings:
 - `SUPABASE_JWT_SECRET`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_REVIEW_CHAT_ID`
+- `SUPABASE_APPROVAL_FUNCTION_NAME` (default: `admin-approval-notifier`)
 - `CORS_ORIGINS` (comma-separated; include your web app URL)
 
 ### Health check

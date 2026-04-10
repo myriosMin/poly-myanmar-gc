@@ -27,6 +27,7 @@ class Settings:
     supabase_jwt_secret: str = ""
     telegram_bot_token: str = ""
     telegram_review_chat_id: str = ""
+    supabase_approval_function_name: str = "admin-approval-notifier"
     store_backend: str = "memory"
 
     def validate_required_credentials(self) -> None:
@@ -63,6 +64,7 @@ def get_settings() -> Settings:
         supabase_jwt_secret=getenv("SUPABASE_JWT_SECRET", ""),
         telegram_bot_token=getenv("TELEGRAM_BOT_TOKEN", ""),
         telegram_review_chat_id=getenv("TELEGRAM_REVIEW_CHAT_ID", ""),
+        supabase_approval_function_name=getenv("SUPABASE_APPROVAL_FUNCTION_NAME", "admin-approval-notifier"),
         store_backend=getenv("STORE_BACKEND", "memory"),
     )
     settings.validate_required_credentials()
